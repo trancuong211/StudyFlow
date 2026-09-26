@@ -22,7 +22,7 @@ Sinh viên học nhiều môn, có deadline, đi làm thêm → dễ bị quá t
 
 | Thành phần | Công nghệ |
 |---|---|
-| Backend chính + UI | Django (server-rendered) **hoặc** Reflex (framework thuần Python) |
+| Backend chính + UI | Django (server-rendered)|
 | API phụ trợ (nếu cần tách riêng cho AI/mobile) | FastAPI |
 | Cơ sở dữ liệu | PostgreSQL |
 | Background jobs / nhắc việc / Pomodoro timer / đồng bộ lịch | Redis + Celery |
@@ -35,7 +35,7 @@ Sinh viên học nhiều môn, có deadline, đi làm thêm → dễ bị quá t
 
 ```mermaid
 flowchart LR
-    U[Người dùng] --> FE[Giao diện Web<br/>Django/Reflex]
+    U[Người dùng] --> FE[Giao diện Web<br/>Django]
     FE --> API[FastAPI - AI service]
     FE --> DB[(PostgreSQL)]
     FE --> Q[Celery Worker]
@@ -68,7 +68,7 @@ flowchart LR
 ## 6. Các bước xây dựng (Roadmap)
 
 ### Giai đoạn 0 – Chuẩn bị (Tuần 1)
-- [ ] Chốt framework chính (Django hoặc Reflex).
+- [ ] Chốt framework chính (Django ).
 - [ ] Thiết kế wireframe UI/UX (Figma hoặc phác thảo tay).
 - [ ] Thiết kế schema database chi tiết (ERD).
 - [ ] Khởi tạo repo, cấu hình môi trường (Docker Compose: app + PostgreSQL + Redis).

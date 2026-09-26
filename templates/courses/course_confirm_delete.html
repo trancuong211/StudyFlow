@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Xác nhận xóa môn học – StudyFlow{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm text-center">
+    <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto text-xl mb-4">
+        ⚠️
+    </div>
+    <h2 class="text-lg font-bold text-slate-900">Xóa môn học?</h2>
+    <p class="text-sm text-slate-500 mt-2">
+        Bạn có chắc muốn xóa môn học <strong class="text-slate-800">"{{ course.name }}"</strong>? Các công việc liên kết sẽ bị hủy gán môn học này.
+    </p>
+
+    <form method="post" class="mt-6 flex justify-center gap-3">
+        {% csrf_token %}
+        <a href="{% url 'courses:list' %}" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-semibold">Hủy bỏ</a>
+        <button type="submit" class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold shadow-sm transition">Xác nhận xóa</button>
+    </form>
+</div>
+{% endblock %}

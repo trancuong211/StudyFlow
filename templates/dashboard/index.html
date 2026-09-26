@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard – StudyFlow{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 rounded-2xl text-white shadow-lg">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Xin chào, {{ user.full_name|default:user.username }}! 👋</h1>
+            <p class="mt-1 text-blue-100 text-sm">Hôm nay là một ngày tuyệt vời để hoàn thành các mục tiêu học tập.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'scheduler:auto_schedule' %}" class="inline-flex items-center px-4 py-2.5 rounded-xl font-semibold bg-white text-blue-700 hover:bg-blue-50 shadow-md text-sm transition">
+                ⚡ Tự Động Lập Lịch
+            </a>
+            <a href="{% url 'tasks:create' %}" class="inline-flex items-center px-4 py-2.5 rounded-xl font-semibold bg-blue-500 bg-opacity-40 hover:bg-opacity-60 text-white border border-white/20 text-sm transition">
+                ➕ Thêm Task Mới
+            </a>
+        </div>
+    </div>
+
+    <!-- AI Insight Alert Banner if available -->
+    {% if latest_insight %}
+    <div class="p-5 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-start gap-4">
+        <span class="text-3xl">🤖</span>
+        <div class="flex-1">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-indigo-950 text-base">{{ latest_insight.title }}</h3>
+                <span class="text-xs text-indigo-500">{{ latest_insight.created_at|timesince }} trước</span>
+            </div>
+            <p class="text-sm text-indigo-900 mt-1">{{ latest_insight.content }}</p>
+            {% if latest_insight.actionable_advice %}
+            <p class="text-xs font-medium text-indigo-700 mt-2 bg-indigo-100/70 p-2 rounded-lg inline-block">
+                💡 Lời khuyên: {{ latest_insight.actionable_advice }}
+            </p>
+            {% endif %}
+        </div>
+        <a href="{% url 'ai_assistant:generate_insight' %}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-white px-3 py-1.5 rounded-lg border border-indigo-200">
+            Phân tích lại
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Metric Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-500">Môn học đang theo</p>
+                <p class="text-3xl font-extrabold text-slate-900 mt-1">{{ total_courses }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                📚
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-500">Công việc cần làm</p>
+                <p class="text-3xl font-extrabold text-slate-900 mt-1">{{ total_pending_tasks }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                📝
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-500">Pomodoro hôm nay</p>
+                <p class="text-3xl font-extrabold text-slate-900 mt-1">{{ today_pomodoro_mins }}<span class="text-base font-medium text-slate-500"> phút</span></p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+                🍅
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-500">Mục tiêu ngày</p>
+                <p class="text-3xl font-extrabold text-slate-900 mt-1">{{ user.daily_study_goal_hours }}<span class="text-base font-medium text-slate-500"> giờ</span></p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                🎯
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Urgent Deadlines & Today's Schedule -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Urgent Deadlines -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <span>🚨</span> Deadline gấp (3 ngày tới)
+                    </h2>
+                    <a href="{% url 'tasks:list' %}" class="text-xs font-semibold text-blue-600 hover:text-blue-800">Xem tất cả →</a>
+                </div>
+
+                <div class="mt-4 space-y-3">
+                    {% for task in urgent_deadlines %}
+                    <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 flex items-center justify-between transition">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-sm text-slate-800">{{ task.title }}</span>
+                                {% if task.course %}
+                                <span class="text-[11px] font-medium px-2 py-0.5 rounded-full text-white" style="background-color: {{ task.course.color }}">
+                                    {{ task.course.name }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Hạn: <span class="font-medium text-red-600">{{ task.deadline|date:"H:i - d/m/Y" }}</span> 
+                                ({{ task.estimated_duration }} phút)
+                            </p>
+                        </div>
+                        <a href="{% url 'tasks:toggle_status' task.id %}" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700">
+                            Xong
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="py-8 text-center text-sm text-slate-400">
+                        🎉 Tuyệt vời! Không có deadline gấp nào trong 3 ngày tới.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <span>📅</span> Khung giờ học hôm nay
+                    </h2>
+                    <a href="{% url 'scheduler:calendar' %}" class="text-xs font-semibold text-blue-600 hover:text-blue-800">Mở lịch →</a>
+                </div>
+
+                <div class="mt-4 space-y-3">
+                    {% for block in today_schedule_blocks %}
+                    <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-base">{% if block.is_locked %}🔒{% else %}📖{% endif %}</span>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">{{ block.title }}</h4>
+                                <p class="text-xs text-slate-500">
+                                    {{ block.start_time|date:"H:i" }} - {{ block.end_time|date:"H:i" }} ({{ block.duration_minutes }}m)
+                                </p>
+                            </div>
+                        </div>
+                        {% if block.is_auto_generated %}
+                        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700">AI Lịch</span>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="py-8 text-center text-sm text-slate-400">
+                        Chưa có block học nào cho hôm nay. Bấm <strong>Tự Động Lập Lịch</strong> để AI sắp xếp!
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

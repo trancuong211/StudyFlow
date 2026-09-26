@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Pomodoro Timer – StudyFlow{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="text-center">
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900">Đồng Hồ Tập Trung Pomodoro</h1>
+        <p class="text-sm text-slate-500 mt-1">Làm việc tập trung trong 25 phút và nghỉ ngơi 5 phút để tối đa hóa hiệu suất học tập.</p>
+    </div>
+
+    <!-- Timer Card -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center max-w-lg mx-auto">
+        <!-- Mode switcher -->
+        <div class="inline-flex p-1.5 bg-slate-100 rounded-2xl gap-1 text-xs font-semibold mb-8">
+            <button id="mode-work" class="px-4 py-2 rounded-xl bg-white shadow-sm text-blue-600 font-bold transition">Tập trung (25m)</button>
+            <button id="mode-short" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition">Nghỉ ngắn (5m)</button>
+            <button id="mode-long" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition">Nghỉ dài (15m)</button>
+        </div>
+
+        <!-- Time Display -->
+        <div class="my-6">
+            <span id="time-display" class="text-7xl sm:text-8xl font-black tracking-tight text-slate-900 tabular-nums">
+                25:00
+            </span>
+        </div>
+
+        <!-- Task Selector -->
+        <div class="mb-8 text-left">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Gắn với công việc:</label>
+            <select id="task-select" class="w-full text-sm border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-500">
+                <option value="">-- Không gắn task cụ thể --</option>
+                {% for t in tasks %}
+                <option value="{{ t.id }}">{{ t.title }} ({{ t.course.name|default:"Chung" }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="flex items-center justify-center gap-4">
+            <button id="btn-toggle" class="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-md transition">
+                Bắt đầu
+            </button>
+            <button id="btn-reset" class="px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition">
+                Đặt lại
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Sessions History -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-base font-bold text-slate-900 mb-4">Lịch Sử Các Phiên Gần Đây</h3>
+        <div class="divide-y divide-slate-100 text-sm">
+            {% for s in recent_sessions %}
+            <div class="py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl">{% if s.session_type == 'WORK' %}🍅{% else %}☕{% endif %}</span>
+                    <div>
+                        <p class="font-medium text-slate-800">{{ s.task.title|default:"Tập trung chung" }}</p>
+                        <p class="text-xs text-slate-400">{{ s.start_time|date:"H:i - d/m/Y" }}</p>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600">
+                    {{ s.duration_minutes }} phút
+                </span>
+            </div>
+            {% empty %}
+            <p class="text-center py-6 text-slate-400 text-xs">Chưa có phiên Pomodoro nào được ghi nhận hôm nay.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let timerInterval = null;
+    let totalSeconds = 25 * 60;
+    let initialSeconds = 25 * 60;
+    let currentMode = 'WORK';
+    let isRunning = false;
+
+    const display = document.getElementById('time-display');
+    const btnToggle = document.getElementById('btn-toggle');
+    const btnReset = document.getElementById('btn-reset');
+    const taskSelect = document.getElementById('task-select');
+
+    function updateDisplay() {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function setMode(mode, minutes, btn) {
+        if (isRunning) toggleTimer();
+        currentMode = mode;
+        initialSeconds = minutes * 60;
+        totalSeconds = initialSeconds;
+        updateDisplay();
+
+        ['mode-work', 'mode-short', 'mode-long'].forEach(id => {
+            const el = document.getElementById(id);
+            el.className = 'px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition';
+        });
+        btn.className = 'px-4 py-2 rounded-xl bg-white shadow-sm text-blue-600 font-bold transition';
+    }
+
+    document.getElementById('mode-work').onclick = function() { setMode('WORK', 25, this); };
+    document.getElementById('mode-short').onclick = function() { setMode('SHORT_BREAK', 5, this); };
+    document.getElementById('mode-long').onclick = function() { setMode('LONG_BREAK', 15, this); };
+
+    function toggleTimer() {
+        if (isRunning) {
+            clearInterval(timerInterval);
+            btnToggle.textContent = 'Tiếp tục';
+            btnToggle.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+            btnToggle.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            isRunning = false;
+        } else {
+            timerInterval = setInterval(() => {
+                if (totalSeconds > 0) {
+                    totalSeconds--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    recordSession();
+                    alert('🎉 Chúc mừng! Phiên Pomodoro đã hoàn thành!');
+                    totalSeconds = initialSeconds;
+                    updateDisplay();
+                    btnToggle.textContent = 'Bắt đầu';
+                }
+            }, 1000);
+            btnToggle.textContent = 'Tạm dừng';
+            btnToggle.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btnToggle.classList.add('bg-amber-600', 'hover:bg-amber-700');
+            isRunning = true;
+        }
+    }
+
+    btnToggle.onclick = toggleTimer;
+
+    btnReset.onclick = function() {
+        if (isRunning) toggleTimer();
+        totalSeconds = initialSeconds;
+        updateDisplay();
+        btnToggle.textContent = 'Bắt đầu';
+    };
+
+    function recordSession() {
+        fetch('{% url "pomodoro:api_record" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                task_id: taskSelect.value || null,
+                session_type: currentMode,
+                duration_minutes: Math.round(initialSeconds / 60),
+                completed: true
+            })
+        }).then(r => r.json()).then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            }
+        });
+    }
+</script>
+{% endblock %}

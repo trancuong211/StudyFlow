@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh Sách Môn Học – StudyFlow{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-900">Môn Học Của Bạn</h1>
+            <p class="text-sm text-slate-500 mt-1">Gán màu sắc cho từng môn để nhận diện trực quan trên Calendar và Dashboard.</p>
+        </div>
+        <div>
+            <a href="{% url 'courses:create' %}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition">
+                ➕ Thêm Môn Học Mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for course in courses %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between hover:shadow-md transition">
+            <div>
+                <div class="flex items-start justify-between">
+                    <span class="w-4 h-4 rounded-full" style="background-color: {{ course.color }}"></span>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                        {{ course.credits }} tín chỉ
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mt-3">{{ course.name }}</h3>
+                {% if course.code %}
+                <p class="text-xs font-medium text-slate-400">Mã: {{ course.code }}</p>
+                {% endif %}
+                {% if course.instructor %}
+                <p class="text-xs text-slate-600 mt-2">👨‍🏫 Giảng viên: {{ course.instructor }}</p>
+                {% endif %}
+                <p class="text-xs text-slate-500 mt-1">{{ course.semester }}</p>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100">
+                <span class="text-xs text-slate-400">{{ course.tasks.count }} công việc</span>
+                <div class="flex gap-2">
+                    <a href="{% url 'courses:edit' course.id %}" class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700">Sửa</a>
+                    <a href="{% url 'courses:delete' course.id %}" class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-red-200 hover:bg-red-50 text-red-600">Xóa</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-400">
+            <span class="text-4xl block mb-2">📚</span>
+            Bạn chưa thêm môn học nào. Hãy bấm <strong>Thêm Môn Học Mới</strong> để bắt đầu phân bổ thời khóa biểu!
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

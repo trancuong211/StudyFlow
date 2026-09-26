@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Trợ Lý AI Phân Tích Lịch – StudyFlow{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-900">Trợ Lý AI Phân Tích Lịch Bận & Deadline</h1>
+            <p class="text-sm text-slate-500 mt-1">AI phát hiện xung đột thời gian, dự báo nguy cơ trễ hạn và đưa ra đề xuất tối ưu.</p>
+        </div>
+        <div>
+            <a href="{% url 'ai_assistant:generate_insight' %}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+                🤖 Chạy Phân Tích Mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Insights List -->
+    <div class="space-y-4">
+        {% for insight in insights %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">
+                        {% if insight.insight_type == 'DEADLINE_RISK' %}🚨
+                        {% elif insight.insight_type == 'DAILY_SUMMARY' %}📋
+                        {% else %}📊{% endif %}
+                    </span>
+                    <div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full
+                            {% if insight.insight_type == 'DEADLINE_RISK' %}bg-rose-100 text-rose-700
+                            {% elif insight.insight_type == 'DAILY_SUMMARY' %}bg-blue-100 text-blue-700
+                            {% else %}bg-purple-100 text-purple-700{% endif %}">
+                            {{ insight.get_insight_type_display }}
+                        </span>
+                        <h3 class="text-lg font-bold text-slate-900 mt-1">{{ insight.title }}</h3>
+                    </div>
+                </div>
+                <span class="text-xs text-slate-400">{{ insight.created_at|date:"H:i - d/m/Y" }}</span>
+            </div>
+
+            <div class="mt-4 text-sm text-slate-700 whitespace-pre-line leading-relaxed">
+                {{ insight.content }}
+            </div>
+
+            {% if insight.actionable_advice %}
+            <div class="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                <span>💡</span>
+                <div>
+                    <strong class="font-bold">Đề xuất hành động:</strong> {{ insight.actionable_advice }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+            <span class="text-4xl block mb-2">🤖</span>
+            Chưa có bản phân tích nào từ AI. Bấm <strong>Chạy Phân Tích Mới</strong> để hệ thống kiểm tra mật độ lịch và deadline cho bạn!
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

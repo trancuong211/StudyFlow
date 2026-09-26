@@ -1,0 +1,100 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: studyflow_db
+    environment:
+      POSTGRES_DB: studyflow_db
+      POSTGRES_USER: studyflow_user
+      POSTGRES_PASSWORD: studyflow_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studyflow_user -d studyflow_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: studyflow_redis
+    ports:
+      - "6379:6379"
+
+  ai_service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.fastapi
+    container_name: studyflow_ai_service
+    ports:
+      - "8001:8001"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+    depends_on:
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: studyflow_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=studyflow.settings
+      - DATABASE_URL=postgres://studyflow_user:studyflow_password@db:5432/studyflow_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AI_SERVICE_URL=http://ai_service:8001
+      - USE_SQLITE=False
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ai_service:
+        condition: service_started
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: studyflow_celery_worker
+    command: celery -A studyflow worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=studyflow.settings
+      - DATABASE_URL=postgres://studyflow_user:studyflow_password@db:5432/studyflow_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: studyflow_celery_beat
+    command: celery -A studyflow beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=studyflow.settings
+      - DATABASE_URL=postgres://studyflow_user:studyflow_password@db:5432/studyflow_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:

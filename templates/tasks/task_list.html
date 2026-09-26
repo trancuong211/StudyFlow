@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh Sách Task & Deadline – StudyFlow{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-900">Nhiệm Vụ & Deadline Học Tập</h1>
+            <p class="text-sm text-slate-500 mt-1">Quản lý bài tập, đồ án, kỳ thi và thiết lập mức độ ưu tiên để máy tự động lên lịch.</p>
+        </div>
+        <div>
+            <a href="{% url 'tasks:create' %}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm transition">
+                ➕ Thêm Công Việc Mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap items-center gap-3 text-xs">
+        <span class="font-bold text-slate-700">Lọc trạng thái:</span>
+        <a href="{% url 'tasks:list' %}" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 {% if not status_filter %}bg-slate-900 text-white border-slate-900 font-semibold{% endif %}">Tất cả</a>
+        <a href="{% url 'tasks:list' %}?status=TODO" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 {% if status_filter == 'TODO' %}bg-blue-600 text-white border-blue-600 font-semibold{% endif %}">Cần làm</a>
+        <a href="{% url 'tasks:list' %}?status=IN_PROGRESS" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 {% if status_filter == 'IN_PROGRESS' %}bg-amber-600 text-white border-amber-600 font-semibold{% endif %}">Đang làm</a>
+        <a href="{% url 'tasks:list' %}?status=COMPLETED" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 {% if status_filter == 'COMPLETED' %}bg-emerald-600 text-white border-emerald-600 font-semibold{% endif %}">Đã xong</a>
+    </div>
+
+    <!-- Task List -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="divide-y divide-slate-100">
+            {% for task in tasks %}
+            <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition">
+                <div class="flex items-start gap-4">
+                    <a href="{% url 'tasks:toggle_status' task.id %}" class="mt-1 w-5 h-5 rounded-md border flex items-center justify-center text-xs transition
+                        {% if task.status == 'COMPLETED' %}bg-emerald-500 border-emerald-500 text-white{% else %}border-slate-300 hover:border-blue-500{% endif %}">
+                        {% if task.status == 'COMPLETED' %}✓{% endif %}
+                    </a>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-bold text-slate-900 text-base {% if task.status == 'COMPLETED' %}line-through text-slate-400{% endif %}">
+                                {{ task.title }}
+                            </span>
+                            {% if task.course %}
+                            <span class="text-xs px-2.5 py-0.5 rounded-full text-white font-medium" style="background-color: {{ task.course.color }}">
+                                {{ task.course.name }}
+                            </span>
+                            {% endif %}
+                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md
+                                {% if task.priority == 4 %}bg-red-100 text-red-700
+                                {% elif task.priority == 3 %}bg-orange-100 text-orange-700
+                                {% elif task.priority == 2 %}bg-blue-100 text-blue-700
+                                {% else %}bg-slate-100 text-slate-700{% endif %}">
+                                {{ task.get_priority_display }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">
+                            ⏰ Hạn chót: <span class="font-semibold {% if task.is_overdue %}text-red-600{% else %}text-slate-700{% endif %}">{{ task.deadline|date:"H:i - d/m/Y" }}</span> 
+                            • Ước tính: {{ task.estimated_duration }} phút 
+                            • {% if task.is_scheduled %}✅ Đã có khung lịch{% else %}⚠️ Chưa xếp lịch{% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 self-end sm:self-center">
+                    <a href="{% url 'tasks:edit' task.id %}" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700">Sửa</a>
+                    <a href="{% url 'tasks:delete' task.id %}" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600">Xóa</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-12 text-center text-slate-400">
+                <span class="text-4xl block mb-2">📋</span>
+                Chưa có nhiệm vụ nào. Bấm <strong>Thêm Công Việc Mới</strong> để bắt đầu!
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

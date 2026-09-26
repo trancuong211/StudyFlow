@@ -1,0 +1,48 @@
+<aside class="w-64 bg-slate-900 text-slate-300 flex-shrink-0 min-h-[calc(100vh-4rem)] p-4 flex flex-col justify-between hidden md:flex">
+    <div class="space-y-6">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 px-3">Quản lý chung</p>
+            <nav class="space-y-1">
+                <a href="{% url 'dashboard:index' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition {% if request.resolver_match.app_name == 'dashboard' %}bg-slate-800 text-white font-semibold{% endif %}">
+                    <span>📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'scheduler:calendar' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition {% if request.resolver_match.app_name == 'scheduler' %}bg-slate-800 text-white font-semibold{% endif %}">
+                    <span>📅</span>
+                    <span>Lịch học & Tối ưu</span>
+                </a>
+                <a href="{% url 'tasks:list' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition {% if request.resolver_match.app_name == 'tasks' %}bg-slate-800 text-white font-semibold{% endif %}">
+                    <span>✅</span>
+                    <span>Task & Deadline</span>
+                </a>
+                <a href="{% url 'courses:list' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition {% if request.resolver_match.app_name == 'courses' %}bg-slate-800 text-white font-semibold{% endif %}">
+                    <span>📚</span>
+                    <span>Môn học</span>
+                </a>
+            </nav>
+        </div>
+
+        <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 px-3">Công cụ năng suất</p>
+            <nav class="space-y-1">
+                <a href="{% url 'pomodoro:timer' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition {% if request.resolver_match.app_name == 'pomodoro' %}bg-slate-800 text-white font-semibold{% endif %}">
+                    <span>⏱️</span>
+                    <span>Pomodoro Timer</span>
+                </a>
+                <a href="{% url 'ai_assistant:insights' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition {% if request.resolver_match.app_name == 'ai_assistant' %}bg-slate-800 text-white font-semibold{% endif %}">
+                    <span>🤖</span>
+                    <span>AI Trợ lý phân tích</span>
+                </a>
+                <a href="{% url 'calendar_sync:sync' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition">
+                    <span>🔄</span>
+                    <span>Đồng bộ Google Calendar</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="border-t border-slate-800 pt-4 px-3 text-xs text-slate-400">
+        <p>StudyFlow v1.0</p>
+        <p class="text-[11px] mt-1 text-slate-400">Productivity + AI Support</p>
+    </div>
+</aside>
