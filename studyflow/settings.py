@@ -30,6 +30,9 @@ ALLOWED_HOSTS = [
     h.strip() for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
+]
 if not DEBUG and (not SECRET_KEY or SECRET_KEY == INSECURE_DEFAULT_SECRET_KEY
                   or SECRET_KEY.startswith('django-insecure-')):
     raise ImproperlyConfigured(
@@ -168,3 +171,15 @@ CELERY_TIMEZONE = TIME_ZONE
 
 # AI Service Settings
 AI_SERVICE_URL = os.getenv('AI_SERVICE_URL', 'http://localhost:8001')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'root': {'handlers': ['console'], 'level': 'INFO'},
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
+    },
+}
