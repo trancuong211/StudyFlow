@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -36,7 +37,7 @@ def api_record_session(request):
             task=task,
             session_type=data.get('session_type', PomodoroSession.SessionType.WORK),
             duration_minutes=int(data.get('duration_minutes', 25)),
-            start_time=timezone.now() - timezone.timedelta(minutes=int(data.get('duration_minutes', 25))),
+            start_time=timezone.now() - timedelta(minutes=int(data.get('duration_minutes', 25))),
             end_time=timezone.now(),
             completed=data.get('completed', True),
             notes=data.get('notes', '')

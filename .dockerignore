@@ -1,0 +1,33 @@
+# Git & VCS
+.git
+.gitignore
+
+# Secrets & local config
+.env
+.env.local
+.env.*.local
+
+# Python cache / build
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.venv
+venv
+
+# Django runtime artifacts
+db.sqlite3
+db.sqlite3-journal
+staticfiles
+media
+*.log
+
+# IDE & OS
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+
+# Archives
+*.zip

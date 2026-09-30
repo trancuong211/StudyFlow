@@ -4,59 +4,88 @@
 
 {% block content %}
 <div class="space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-black text-slate-900">Trợ Lý AI Phân Tích Lịch Bận & Deadline</h1>
-            <p class="text-sm text-slate-500 mt-1">AI phát hiện xung đột thời gian, dự báo nguy cơ trễ hạn và đưa ra đề xuất tối ưu.</p>
+            <p class="text-sm font-medium text-brand-600 mb-1">Trợ lý thông minh</p>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">AI Phân tích lịch & deadline</h1>
+            <p class="text-sm text-slate-500 mt-1">Phát hiện xung đột thời gian, dự báo nguy cơ trễ hạn, đề xuất tối ưu.</p>
         </div>
-        <div>
-            <a href="{% url 'ai_assistant:generate_insight' %}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
-                🤖 Chạy Phân Tích Mới
-            </a>
-        </div>
+        <a href="{% url 'ai_assistant:generate_insight' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm shadow-sm transition-colors self-start sm:self-auto">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Chạy phân tích mới
+        </a>
     </div>
 
     <!-- Insights List -->
     <div class="space-y-4">
         {% for insight in insights %}
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <div class="flex items-start justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">
-                        {% if insight.insight_type == 'DEADLINE_RISK' %}🚨
-                        {% elif insight.insight_type == 'DAILY_SUMMARY' %}📋
-                        {% else %}📊{% endif %}
-                    </span>
-                    <div>
-                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full
-                            {% if insight.insight_type == 'DEADLINE_RISK' %}bg-rose-100 text-rose-700
-                            {% elif insight.insight_type == 'DAILY_SUMMARY' %}bg-blue-100 text-blue-700
-                            {% else %}bg-purple-100 text-purple-700{% endif %}">
-                            {{ insight.get_insight_type_display }}
-                        </span>
-                        <h3 class="text-lg font-bold text-slate-900 mt-1">{{ insight.title }}</h3>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Top color stripe by insight type -->
+            <div class="h-1
+                {% if insight.insight_type == 'DEADLINE_RISK' %}bg-red-500
+                {% elif insight.insight_type == 'DAILY_SUMMARY' %}bg-brand-500
+                {% else %}bg-purple-500{% endif %}"></div>
+
+            <div class="p-5 sm:p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-start gap-3 min-w-0">
+                        <!-- Type Icon -->
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
+                            {% if insight.insight_type == 'DEADLINE_RISK' %}bg-red-50 text-red-500
+                            {% elif insight.insight_type == 'DAILY_SUMMARY' %}bg-brand-50 text-brand-600
+                            {% else %}bg-purple-50 text-purple-600{% endif %}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                {% if insight.insight_type == 'DEADLINE_RISK' %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                {% elif insight.insight_type == 'DAILY_SUMMARY' %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                {% else %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>{% endif %}
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap mb-1">
+                                <span class="text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded
+                                    {% if insight.insight_type == 'DEADLINE_RISK' %}bg-red-50 text-red-700 border border-red-200
+                                    {% elif insight.insight_type == 'DAILY_SUMMARY' %}bg-brand-50 text-brand-700 border border-brand-200
+                                    {% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
+                                    {{ insight.get_insight_type_display }}
+                                </span>
+                                {% if insight.insight_type == 'DEADLINE_RISK' %}
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-red-100 text-red-800">Cần hành động</span>
+                                {% endif %}
+                            </div>
+                            <h3 class="font-semibold text-slate-900 leading-snug">{{ insight.title }}</h3>
+                        </div>
+                    </div>
+                    <span class="text-xs text-slate-400 flex-shrink-0 mt-1">{{ insight.created_at|date:"H:i - d/m/Y" }}</span>
+                </div>
+
+                <!-- Content -->
+                <div class="mt-4 text-sm text-slate-600 leading-relaxed whitespace-pre-line">{{ insight.content }}</div>
+
+                <!-- Advice -->
+                {% if insight.actionable_advice %}
+                <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM4 10a1 1 0 01-1 1H2a1 1 0 110-2h1a1 1 0 011 1z"></path><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd"></path></svg>
+                        <div class="text-xs text-amber-900 leading-relaxed">
+                            <span class="font-semibold">Đề xuất hành động:</span> {{ insight.actionable_advice }}
+                        </div>
                     </div>
                 </div>
-                <span class="text-xs text-slate-400">{{ insight.created_at|date:"H:i - d/m/Y" }}</span>
+                {% endif %}
             </div>
-
-            <div class="mt-4 text-sm text-slate-700 whitespace-pre-line leading-relaxed">
-                {{ insight.content }}
-            </div>
-
-            {% if insight.actionable_advice %}
-            <div class="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
-                <span>💡</span>
-                <div>
-                    <strong class="font-bold">Đề xuất hành động:</strong> {{ insight.actionable_advice }}
-                </div>
-            </div>
-            {% endif %}
         </div>
         {% empty %}
-        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
-            <span class="text-4xl block mb-2">🤖</span>
-            Chưa có bản phân tích nào từ AI. Bấm <strong>Chạy Phân Tích Mới</strong> để hệ thống kiểm tra mật độ lịch và deadline cho bạn!
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.734-.988-2.386l-.548-.547z"></path></svg>
+            </div>
+            <p class="font-medium text-slate-700">Chưa có bản phân tích nào</p>
+            <p class="text-sm text-slate-400 mt-1 mb-4">Bấm "Chạy phân tích mới" để AI kiểm tra mật độ lịch và deadline của bạn.</p>
+            <a href="{% url 'ai_assistant:generate_insight' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                Chạy phân tích mới
+            </a>
         </div>
         {% endfor %}
     </div>

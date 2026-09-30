@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from datetime import timedelta
 from django.db.models import Sum
 from apps.courses.models import Course
 from apps.tasks.models import Task
@@ -18,8 +19,10 @@ def index(request):
     - Lịch học hôm nay
     """
     now = timezone.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    # Đầu/cuối ngày theo giờ địa phương (TIME_ZONE = Asia/Ho_Chi_Minh)
+    local_now = timezone.localtime(now)
+    today_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = local_now.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     # Thống kê cơ bản
     total_courses = Course.objects.filter(user=request.user, is_active=True).count()
@@ -30,7 +33,7 @@ def index(request):
     total_pending_tasks = pending_tasks.count()
 
     # Deadline trong vòng 3 ngày tới
-    three_days_later = now + timezone.timedelta(days=3)
+    three_days_later = now + timedelta(days=3)
     urgent_deadlines = pending_tasks.filter(deadline__lte=three_days_later).order_by('deadline')[:5]
 
     # Tổng thời gian Pomodoro hôm nay

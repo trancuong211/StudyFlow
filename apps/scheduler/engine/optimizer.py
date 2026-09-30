@@ -15,7 +15,7 @@ class ScheduleOptimizer:
 
     def __init__(self, user, start_date=None, days_ahead=7, study_hours=(8, 22)):
         self.user = user
-        self.start_date = start_date or timezone.now().date()
+        self.start_date = start_date or timezone.localdate()
         self.days_ahead = days_ahead
         self.study_start_hour, self.study_end_hour = study_hours
 
@@ -47,7 +47,7 @@ class ScheduleOptimizer:
             day_end = timezone.make_aware(datetime.combine(current_day, time(self.study_end_hour, 0)))
 
             # Nếu là ngày hôm nay, chỉ xếp từ thời điểm hiện tại + 15 phút
-            if current_day == current_time.date():
+            if current_day == timezone.localdate():
                 earliest_start = current_time + timedelta(minutes=15)
                 if earliest_start > day_start:
                     day_start = earliest_start

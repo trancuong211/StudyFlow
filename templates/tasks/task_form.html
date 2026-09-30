@@ -3,71 +3,92 @@
 {% block title %}{{ title }} – StudyFlow{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
-    <div class="mb-6 pb-4 border-b border-slate-100">
-        <h1 class="text-xl font-bold text-slate-900">{{ title }}</h1>
-        <p class="text-xs text-slate-500 mt-1">Điền đầy đủ thông tin để thuật toán lập lịch tối ưu hóa khung giờ học cho bạn.</p>
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{% url 'tasks:list' %}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            Quay lại danh sách
+        </a>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">{{ title }}</h1>
+        <p class="text-sm text-slate-500 mt-1">Điền đầy đủ thông tin để thuật toán lập lịch tối ưu hóa khung giờ học.</p>
     </div>
 
-    <form method="post" class="space-y-4">
-        {% csrf_token %}
-        
-        <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Môn học</label>
-            {{ form.course }}
-        </div>
+    <!-- Form Card -->
+    <div class="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
 
-        <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Tiêu đề công việc</label>
-            {{ form.title }}
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Độ ưu tiên</label>
-                {{ form.priority }}
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Môn học</label>
+                {{ form.course_name }}
+                {% if form.course_name.help_text %}
+                <p class="text-xs text-slate-400 mt-1.5">{{ form.course_name.help_text }}</p>
+                {% endif %}
+                {% for error in form.course_name.errors %}
+                <p class="text-xs text-red-600 mt-1.5">{{ error }}</p>
+                {% endfor %}
             </div>
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Thời lượng ước tính (phút)</label>
-                {{ form.estimated_duration }}
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Hạn chót (Deadline)</label>
-                {{ form.deadline }}
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Tiêu đề công việc</label>
+                {{ form.title }}
             </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Độ ưu tiên</label>
+                    {{ form.priority }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Thời lượng ước tính (phút)</label>
+                    {{ form.estimated_duration }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Hạn chót (Deadline)</label>
+                    {{ form.deadline }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Trạng thái</label>
+                    {{ form.status }}
+                </div>
+            </div>
+
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Trạng thái</label>
-                {{ form.status }}
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Chi tiết công việc</label>
+                {{ form.description }}
             </div>
-        </div>
 
-        <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Chi tiết công việc</label>
-            {{ form.description }}
-        </div>
-
-        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-            <a href="{% url 'tasks:list' %}" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold">Hủy</a>
-            <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition">Lưu công việc</button>
-        </div>
-    </form>
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <a href="{% url 'tasks:list' %}" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors">Hủy</a>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium shadow-sm transition-colors">Lưu công việc</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <style>
     input[type="text"], input[type="datetime-local"], input[type="number"], select, textarea {
         width: 100%;
         border-radius: 0.75rem;
-        border: 1px solid #cbd5e1;
-        padding: 0.5rem 0.75rem;
+        border: 1px solid #e2e8f0;
+        padding: 0.625rem 0.875rem;
         font-size: 0.875rem;
+        line-height: 1.5;
+        color: #1e293b;
+        background-color: #fff;
+        transition: border-color 0.15s, box-shadow 0.15s;
     }
+    input::placeholder, textarea::placeholder { color: #94a3b8; }
     input:focus, select:focus, textarea:focus {
         outline: none;
         border-color: #3b82f6;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
+    textarea { min-height: 100px; resize: vertical; }
+    select { appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
 </style>
 {% endblock %}

@@ -70,3 +70,12 @@ class Task(models.Model):
         self.status = self.Status.COMPLETED
         self.completed_at = timezone.now()
         self.save()
+
+    def save(self, *args, **kwargs):
+        """Đồng bộ completed_at theo trạng thái: COMPLETED -> có timestamp, ngược lại -> None."""
+        if self.status == self.Status.COMPLETED:
+            if not self.completed_at:
+                self.completed_at = timezone.now()
+        else:
+            self.completed_at = None
+        super().save(*args, **kwargs)

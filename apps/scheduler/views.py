@@ -3,10 +3,21 @@ from datetime import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .models import ScheduleBlock
 from .engine.optimizer import ScheduleOptimizer
+
+
+def _parse_datetime(value):
+    """Chuỗi ISO -> datetime; xử lý hậu tố 'Z' trên Python < 3.11 và datetime naive."""
+    if isinstance(value, str) and value.endswith('Z'):
+        value = value[:-1] + '+00:00'
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None:
+        dt = timezone.make_aware(dt)
+    return dt
 
 @login_required
 def calendar_view(request):
@@ -49,11 +60,24 @@ def api_update_block(request, pk):
     block = get_object_or_404(ScheduleBlock, pk=pk, user=request.user)
     try:
         data = json.loads(request.body)
-        if 'start' in data:
-            block.start_time = datetime.fromisoformat(data['start'])
-        if 'end' in data:
-            block.end_time = datetime.fromisoformat(data['end'])
-        
+        start_time = block.start_time
+        end_time = block.end_time
+
+        # Chỉ gán khi giá trị không phải None (kéo–thả có thể gửi end=null)
+        if data.get('start') is not None:
+            start_time = _parse_datetime(data['start'])
+        if data.get('end') is not None:
+            end_time = _parse_datetime(data['end'])
+
+        if end_time is not None and start_time is not None and end_time <= start_time:
+            return JsonResponse(
+                {'status': 'error', 'message': 'Thời gian kết thúc phải sau thời gian bắt đầu'},
+                status=400
+            )
+
+        block.start_time = start_time
+        block.end_time = end_time
+
         # Khi người dùng tự tay chỉnh sửa lịch, tự động khóa block để không bị thuật toán ghi đè
         if data.get('lock_on_edit', True):
             block.is_locked = True
@@ -73,6 +97,7 @@ def api_toggle_lock(request, pk):
     return JsonResponse({'status': 'success', 'is_locked': block.is_locked})
 
 @login_required
+@require_POST
 def trigger_auto_schedule(request):
     """Kích hoạt thuật toán tự động sắp xếp lịch."""
     optimizer = ScheduleOptimizer(user=request.user)

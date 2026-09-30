@@ -1,4 +1,5 @@
 import requests
+from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 from .models import AIInsight
@@ -53,14 +54,16 @@ class AIServiceBridge:
                 )
                 return insight
         except Exception:
-            # Fallback phân tích heuristic khi chưa bật service FastAPI
-            return cls._heuristic_risk_analysis(user, upcoming_tasks)
+            pass
+
+        # Mọi nhánh lỗi (non-200, exception, JSON sai) đều rơi về phân tích heuristic
+        return cls._heuristic_risk_analysis(user, upcoming_tasks)
 
     @classmethod
     def _heuristic_risk_analysis(cls, user, tasks):
         """Phân tích quy tắc dự phòng khi AI service chưa khả dụng."""
         now = timezone.now()
-        urgent_tasks = [t for t in tasks if t.deadline < now + timezone.timedelta(days=2)]
+        urgent_tasks = [t for t in tasks if t.deadline < now + timedelta(days=2)]
         
         if urgent_tasks:
             title = f"Cảnh báo: Có {len(urgent_tasks)} công việc sắp đến hạn trong 48 giờ tới!"

@@ -3,32 +3,41 @@
 {% block title %}Pomodoro Timer – StudyFlow{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8">
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
     <div class="text-center">
-        <h1 class="text-2xl sm:text-3xl font-black text-slate-900">Đồng Hồ Tập Trung Pomodoro</h1>
-        <p class="text-sm text-slate-500 mt-1">Làm việc tập trung trong 25 phút và nghỉ ngơi 5 phút để tối đa hóa hiệu suất học tập.</p>
+        <p class="text-sm font-medium text-brand-600 mb-1">Tập trung & nghỉ ngơi</p>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Pomodoro Timer</h1>
+        <p class="text-sm text-slate-500 mt-1">Làm việc tập trung 25 phút, nghỉ 5 phút để tối đa hóa hiệu suất.</p>
     </div>
 
     <!-- Timer Card -->
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center max-w-lg mx-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 max-w-lg mx-auto text-center">
         <!-- Mode switcher -->
-        <div class="inline-flex p-1.5 bg-slate-100 rounded-2xl gap-1 text-xs font-semibold mb-8">
-            <button id="mode-work" class="px-4 py-2 rounded-xl bg-white shadow-sm text-blue-600 font-bold transition">Tập trung (25m)</button>
-            <button id="mode-short" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition">Nghỉ ngắn (5m)</button>
-            <button id="mode-long" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition">Nghỉ dài (15m)</button>
+        <div class="inline-flex p-1 bg-slate-100 rounded-xl gap-1 text-xs font-medium mb-8 w-full" role="tablist">
+            <button id="mode-work" class="flex-1 px-3 py-2 rounded-lg bg-white shadow-sm text-brand-600 font-semibold transition" role="tab" aria-selected="true">Tập trung</button>
+            <button id="mode-short" class="flex-1 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-700 transition" role="tab" aria-selected="false">Nghỉ ngắn</button>
+            <button id="mode-long" class="flex-1 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-700 transition" role="tab" aria-selected="false">Nghỉ dài</button>
         </div>
 
-        <!-- Time Display -->
-        <div class="my-6">
-            <span id="time-display" class="text-7xl sm:text-8xl font-black tracking-tight text-slate-900 tabular-nums">
-                25:00
-            </span>
+        <!-- Timer Ring -->
+        <div class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-2">
+            <!-- SVG Ring -->
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 200 200" aria-hidden="true">
+                <circle cx="100" cy="100" r="90" fill="none" stroke="#f1f5f9" stroke-width="8"></circle>
+                <circle id="progressRing" cx="100" cy="100" r="90" fill="none" stroke="#2563eb" stroke-width="8" stroke-linecap="round" stroke-dasharray="565.48" stroke-dashoffset="0" class="transition-all duration-1000 ease-linear"></circle>
+            </svg>
+            <!-- Time Display (centered) -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="time-display" class="text-5xl sm:text-6xl font-bold tracking-tight text-slate-900 tabular-nums">25:00</span>
+                <span id="mode-label" class="text-xs font-medium text-slate-400 mt-1 uppercase tracking-wider">Tập trung</span>
+            </div>
         </div>
 
         <!-- Task Selector -->
-        <div class="mb-8 text-left">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Gắn với công việc:</label>
-            <select id="task-select" class="w-full text-sm border border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-500">
+        <div class="mt-8 text-left max-w-xs mx-auto">
+            <label for="task-select" class="block text-xs font-medium text-slate-500 mb-1.5">Gắn với công việc:</label>
+            <select id="task-select" class="w-full text-sm border border-slate-200 rounded-xl p-2.5 bg-white focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-colors">
                 <option value="">-- Không gắn task cụ thể --</option>
                 {% for t in tasks %}
                 <option value="{{ t.id }}">{{ t.title }} ({{ t.course.name|default:"Chung" }})</option>
@@ -37,35 +46,52 @@
         </div>
 
         <!-- Control Buttons -->
-        <div class="flex items-center justify-center gap-4">
-            <button id="btn-toggle" class="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-md transition">
+        <div class="flex items-center justify-center gap-3 mt-6">
+            <button id="btn-toggle" class="px-8 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-sm transition-colors min-w-[140px]">
                 Bắt đầu
             </button>
-            <button id="btn-reset" class="px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition">
+            <button id="btn-reset" class="px-5 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium text-sm transition-colors">
                 Đặt lại
             </button>
         </div>
     </div>
 
-    <!-- Recent Sessions History -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <h3 class="text-base font-bold text-slate-900 mb-4">Lịch Sử Các Phiên Gần Đây</h3>
-        <div class="divide-y divide-slate-100 text-sm">
+    <!-- Recent Sessions -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div class="px-5 py-4 border-b border-slate-100">
+            <h3 class="font-semibold text-slate-900">Phiên gần đây</h3>
+        </div>
+        <div class="divide-y divide-slate-100">
             {% for s in recent_sessions %}
-            <div class="py-3 flex items-center justify-between">
+            <div class="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
                 <div class="flex items-center gap-3">
-                    <span class="text-xl">{% if s.session_type == 'WORK' %}🍅{% else %}☕{% endif %}</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                        {% if s.session_type == 'WORK' %}bg-brand-50 text-brand-600{% else %}bg-emerald-50 text-emerald-600{% endif %}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            {% if s.session_type == 'WORK' %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>{% else %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>{% endif %}
+                        </svg>
+                    </div>
                     <div>
-                        <p class="font-medium text-slate-800">{{ s.task.title|default:"Tập trung chung" }}</p>
+                        <p class="font-medium text-sm text-slate-900">{{ s.task.title|default:"Tập trung chung" }}</p>
                         <p class="text-xs text-slate-400">{{ s.start_time|date:"H:i - d/m/Y" }}</p>
                     </div>
                 </div>
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600">
-                    {{ s.duration_minutes }} phút
-                </span>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium px-2 py-1 rounded-md
+                        {% if s.session_type == 'WORK' %}bg-brand-50 text-brand-700{% else %}bg-emerald-50 text-emerald-700{% endif %}">
+                        {{ s.session_type|lower }}
+                    </span>
+                    <span class="text-xs font-semibold text-slate-600 tabular-nums">{{ s.duration_minutes }} phút</span>
+                </div>
             </div>
             {% empty %}
-            <p class="text-center py-6 text-slate-400 text-xs">Chưa có phiên Pomodoro nào được ghi nhận hôm nay.</p>
+            <div class="py-10 text-center">
+                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <p class="text-sm font-medium text-slate-600">Chưa có phiên Pomodoro nào</p>
+                <p class="text-xs text-slate-400 mt-1">Bắt đầu timer để ghi nhận phiên tập trung đầu tiên.</p>
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -84,11 +110,21 @@
     const btnToggle = document.getElementById('btn-toggle');
     const btnReset = document.getElementById('btn-reset');
     const taskSelect = document.getElementById('task-select');
+    const progressRing = document.getElementById('progressRing');
+    const modeLabel = document.getElementById('mode-label');
+    const RING_CIRCUMFERENCE = 565.48;
+
+    const MODE_LABELS = { WORK: 'Tập trung', SHORT_BREAK: 'Nghỉ ngắn', LONG_BREAK: 'Nghỉ dài' };
+    const MODE_COLORS = { WORK: '#2563eb', SHORT_BREAK: '#10b981', LONG_BREAK: '#8b5cf6' };
 
     function updateDisplay() {
         const mins = Math.floor(totalSeconds / 60);
         const secs = totalSeconds % 60;
         display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        // Update progress ring
+        const progress = 1 - (totalSeconds / initialSeconds);
+        progressRing.style.strokeDashoffset = (progress * RING_CIRCUMFERENCE).toString();
+        progressRing.style.stroke = MODE_COLORS[currentMode];
     }
 
     function setMode(mode, minutes, btn) {
@@ -97,12 +133,15 @@
         initialSeconds = minutes * 60;
         totalSeconds = initialSeconds;
         updateDisplay();
+        modeLabel.textContent = MODE_LABELS[mode];
 
         ['mode-work', 'mode-short', 'mode-long'].forEach(id => {
             const el = document.getElementById(id);
-            el.className = 'px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition';
+            el.className = 'flex-1 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-700 transition';
+            el.setAttribute('aria-selected', 'false');
         });
-        btn.className = 'px-4 py-2 rounded-xl bg-white shadow-sm text-blue-600 font-bold transition';
+        btn.className = 'flex-1 px-3 py-2 rounded-lg bg-white shadow-sm text-brand-600 font-semibold transition';
+        btn.setAttribute('aria-selected', 'true');
     }
 
     document.getElementById('mode-work').onclick = function() { setMode('WORK', 25, this); };
@@ -113,8 +152,8 @@
         if (isRunning) {
             clearInterval(timerInterval);
             btnToggle.textContent = 'Tiếp tục';
-            btnToggle.classList.remove('bg-amber-600', 'hover:bg-amber-700');
-            btnToggle.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            btnToggle.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+            btnToggle.classList.add('bg-brand-600', 'hover:bg-brand-700');
             isRunning = false;
         } else {
             timerInterval = setInterval(() => {
@@ -132,8 +171,8 @@
                 }
             }, 1000);
             btnToggle.textContent = 'Tạm dừng';
-            btnToggle.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            btnToggle.classList.add('bg-amber-600', 'hover:bg-amber-700');
+            btnToggle.classList.remove('bg-brand-600', 'hover:bg-brand-700');
+            btnToggle.classList.add('bg-amber-500', 'hover:bg-amber-600');
             isRunning = true;
         }
     }
