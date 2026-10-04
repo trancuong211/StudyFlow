@@ -37,11 +37,16 @@ class PomodoroSession(models.Model):
     completed = models.BooleanField('Hoàn thành trọn vẹn', default=True)
     notes = models.CharField('Ghi chú phiên', max_length=255, blank=True)
     created_at = models.DateTimeField('Ngày tạo', auto_now_add=True)
+    target_minutes = models.PositiveSmallIntegerField(default=25)
+    elapsed_seconds = models.PositiveIntegerField(default=0)
+    running_since = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Phiên Pomodoro'
         verbose_name_plural = 'Danh sách phiên Pomodoro'
         ordering = ['-start_time']
+        constraints = [models.UniqueConstraint(fields=['user'], condition=models.Q(is_active=True), name='one_active_pomodoro_per_user')]
 
     def __str__(self):
         return f"{self.user.username} - {self.get_session_type_display()} ({self.duration_minutes}m)"

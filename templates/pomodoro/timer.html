@@ -3,7 +3,7 @@
 {% block title %}Pomodoro Timer – StudyFlow{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="w-full space-y-6">
     <!-- Header -->
     <div class="text-center">
         <p class="text-sm font-medium text-brand-600 mb-1">Tập trung & nghỉ ngơi</p>
@@ -12,7 +12,7 @@
     </div>
 
     <!-- Timer Card -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 max-w-lg mx-auto text-center">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 w-full text-center">
         <!-- Mode switcher -->
         <div class="inline-flex p-1 bg-slate-100 rounded-xl gap-1 text-xs font-medium mb-8 w-full" role="tablist">
             <button id="mode-work" class="flex-1 px-3 py-2 rounded-lg bg-white shadow-sm text-brand-600 font-semibold transition" role="tab" aria-selected="true">Tập trung</button>
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Task Selector -->
-        <div class="mt-8 text-left max-w-xs mx-auto">
+        <div class="mt-8 text-left w-full">
             <label for="task-select" class="block text-xs font-medium text-slate-500 mb-1.5">Gắn với công việc:</label>
             <select id="task-select" class="w-full text-sm border border-slate-200 rounded-xl p-2.5 bg-white focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-colors">
                 <option value="">-- Không gắn task cụ thể --</option>
@@ -46,7 +46,7 @@
         </div>
 
         <!-- Control Buttons -->
-        <div class="flex items-center justify-center gap-3 mt-6">
+        <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
             <button id="btn-toggle" class="px-8 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-sm transition-colors min-w-[140px]">
                 Bắt đầu
             </button>
@@ -63,8 +63,8 @@
         </div>
         <div class="divide-y divide-slate-100">
             {% for s in recent_sessions %}
-            <div class="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                <div class="flex items-center gap-3">
+            <div class="px-5 py-3.5 flex flex-wrap gap-3 items-center justify-between hover:bg-slate-50/50 transition-colors">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
                     <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
                         {% if s.session_type == 'WORK' %}bg-brand-50 text-brand-600{% else %}bg-emerald-50 text-emerald-600{% endif %}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -79,7 +79,7 @@
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-medium px-2 py-1 rounded-md
                         {% if s.session_type == 'WORK' %}bg-brand-50 text-brand-700{% else %}bg-emerald-50 text-emerald-700{% endif %}">
-                        {{ s.session_type|lower }}
+                        {{ s.get_session_type_display }}{% if not s.completed %} · Chưa hoàn thành{% endif %}
                     </span>
                     <span class="text-xs font-semibold text-slate-600 tabular-nums">{{ s.duration_minutes }} phút</span>
                 </div>
@@ -100,110 +100,76 @@
 
 {% block extra_js %}
 <script>
-    let timerInterval = null;
-    let totalSeconds = 25 * 60;
-    let initialSeconds = 25 * 60;
-    let currentMode = 'WORK';
-    let isRunning = false;
-
-    const display = document.getElementById('time-display');
-    const btnToggle = document.getElementById('btn-toggle');
-    const btnReset = document.getElementById('btn-reset');
-    const taskSelect = document.getElementById('task-select');
-    const progressRing = document.getElementById('progressRing');
-    const modeLabel = document.getElementById('mode-label');
-    const RING_CIRCUMFERENCE = 565.48;
-
-    const MODE_LABELS = { WORK: 'Tập trung', SHORT_BREAK: 'Nghỉ ngắn', LONG_BREAK: 'Nghỉ dài' };
-    const MODE_COLORS = { WORK: '#2563eb', SHORT_BREAK: '#10b981', LONG_BREAK: '#8b5cf6' };
-
-    function updateDisplay() {
-        const mins = Math.floor(totalSeconds / 60);
-        const secs = totalSeconds % 60;
-        display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        // Update progress ring
-        const progress = 1 - (totalSeconds / initialSeconds);
-        progressRing.style.strokeDashoffset = (progress * RING_CIRCUMFERENCE).toString();
-        progressRing.style.stroke = MODE_COLORS[currentMode];
+(() => {
+    const display=document.getElementById('time-display'), toggle=document.getElementById('btn-toggle');
+    const reset=document.getElementById('btn-reset'), task=document.getElementById('task-select');
+    const ring=document.getElementById('progressRing'), label=document.getElementById('mode-label');
+    const notice=document.createElement('p');notice.setAttribute('role','status');notice.className='text-sm text-slate-700 mt-4';
+    toggle.parentElement.after(notice);
+    const modes={WORK:{minutes:25,label:'Tập trung',button:'mode-work',color:'#2563eb'},SHORT_BREAK:{minutes:5,label:'Nghỉ ngắn',button:'mode-short',color:'#059669'},LONG_BREAK:{minutes:15,label:'Nghỉ dài',button:'mode-long',color:'#7c3aed'}};
+    let session=null, mode='WORK', anchor=performance.now(), completing=false, busy=false, saveFailed=false;
+    async function request(url, body) {
+        const response=await fetch(url,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify(body)});
+        const data=await response.json();
+        if(!response.ok)throw new Error(data.message || 'Không thể lưu timer. Kiểm tra kết nối và thử lại.');
+        return data;
     }
-
-    function setMode(mode, minutes, btn) {
-        if (isRunning) toggleTimer();
-        currentMode = mode;
-        initialSeconds = minutes * 60;
-        totalSeconds = initialSeconds;
-        updateDisplay();
-        modeLabel.textContent = MODE_LABELS[mode];
-
-        ['mode-work', 'mode-short', 'mode-long'].forEach(id => {
-            const el = document.getElementById(id);
-            el.className = 'flex-1 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-700 transition';
-            el.setAttribute('aria-selected', 'false');
+    function apply(data) {
+        session=data.session?.active?data.session:null;
+        if(session) {mode=session.mode;task.value=session.task_id||'';}
+        anchor=performance.now();render();
+    }
+    function render() {
+        const config=modes[mode], target=session?.target_seconds||config.minutes*60;
+        const passed=session?session.elapsed_seconds+(session.running?(performance.now()-anchor)/1000:0):0;
+        const remaining=Math.max(0,Math.ceil(target-passed));
+        display.textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');
+        ring.style.strokeDashoffset=String((1-remaining/target)*565.48);ring.style.stroke=config.color;
+        label.textContent=config.label;task.disabled=!!session;
+        Object.entries(modes).forEach(([key,value])=>{
+            const button=document.getElementById(value.button);
+            button.setAttribute('aria-selected',String(key===mode));
+            button.className='flex-1 px-3 py-2 rounded-lg transition '+(key===mode?'bg-white shadow-sm text-brand-600 font-semibold':'text-slate-600');
+            button.disabled=!!session||busy;
         });
-        btn.className = 'flex-1 px-3 py-2 rounded-lg bg-white shadow-sm text-brand-600 font-semibold transition';
-        btn.setAttribute('aria-selected', 'true');
+        toggle.disabled=busy;reset.disabled=busy;
+        toggle.textContent=saveFailed?'Lưu phiên':session?(session.running?'Tạm dừng':'Tiếp tục'):'Bắt đầu';
+        if(session && remaining===0 && session.running && !completing && !saveFailed)complete();
     }
-
-    document.getElementById('mode-work').onclick = function() { setMode('WORK', 25, this); };
-    document.getElementById('mode-short').onclick = function() { setMode('SHORT_BREAK', 5, this); };
-    document.getElementById('mode-long').onclick = function() { setMode('LONG_BREAK', 15, this); };
-
-    function toggleTimer() {
-        if (isRunning) {
-            clearInterval(timerInterval);
-            btnToggle.textContent = 'Tiếp tục';
-            btnToggle.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-            btnToggle.classList.add('bg-brand-600', 'hover:bg-brand-700');
-            isRunning = false;
-        } else {
-            timerInterval = setInterval(() => {
-                if (totalSeconds > 0) {
-                    totalSeconds--;
-                    updateDisplay();
-                } else {
-                    clearInterval(timerInterval);
-                    isRunning = false;
-                    recordSession();
-                    alert('🎉 Chúc mừng! Phiên Pomodoro đã hoàn thành!');
-                    totalSeconds = initialSeconds;
-                    updateDisplay();
-                    btnToggle.textContent = 'Bắt đầu';
-                }
-            }, 1000);
-            btnToggle.textContent = 'Tạm dừng';
-            btnToggle.classList.remove('bg-brand-600', 'hover:bg-brand-700');
-            btnToggle.classList.add('bg-amber-500', 'hover:bg-amber-600');
-            isRunning = true;
-        }
+    async function complete() {
+        completing=true;busy=true;render();
+        try {
+            const data=await request('/pomodoro/api/session/'+session.id+'/finish/',{});
+            if(!data.session?.completed)throw new Error('Phiên chưa được ghi nhận.');
+            apply(data);notice.textContent='Đã ghi nhận phiên '+modes[mode].label.toLowerCase()+'. Bạn có thể bắt đầu phiên tiếp theo.';
+            saveFailed=false;
+        } catch(e){notice.textContent=e.message;saveFailed=true;}
+        finally{busy=false;completing=false;render();}
     }
-
-    btnToggle.onclick = toggleTimer;
-
-    btnReset.onclick = function() {
-        if (isRunning) toggleTimer();
-        totalSeconds = initialSeconds;
-        updateDisplay();
-        btnToggle.textContent = 'Bắt đầu';
+    toggle.onclick=async()=>{
+        if(saveFailed){saveFailed=false;await complete();return;}
+        busy=true;render();
+        try {
+            const data=session?await request('/pomodoro/api/session/'+session.id+'/'+(session.running?'pause':'resume')+'/',{}):
+                await request('{% url "pomodoro:api_start" %}',{session_type:mode,task_id:task.value||null});
+            apply(data);notice.textContent='';
+        }catch(e){notice.textContent=e.message;}finally{busy=false;render();}
     };
-
-    function recordSession() {
-        fetch('{% url "pomodoro:api_record" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                task_id: taskSelect.value || null,
-                session_type: currentMode,
-                duration_minutes: Math.round(initialSeconds / 60),
-                completed: true
-            })
-        }).then(r => r.json()).then(data => {
-            if (data.status === 'success') {
-                location.reload();
-            }
-        });
+    reset.onclick=async()=>{
+        if(session && !confirm('Đặt lại timer? Phiên đang chạy sẽ được lưu là chưa hoàn thành.'))return;
+        busy=true;render();
+        try{if(session)await request('/pomodoro/api/session/'+session.id+'/cancel/',{});session=null;saveFailed=false;notice.textContent='Đã đặt lại timer.';}
+        catch(e){notice.textContent=e.message;}finally{busy=false;render();}
+    };
+    Object.entries(modes).forEach(([key,value])=>document.getElementById(value.button).onclick=()=>{if(!session){mode=key;render();}});
+    async function refresh() {
+        if(busy)return;
+        try{apply(await request('{% url "pomodoro:api_state" %}'));}
+        catch(e){notice.textContent=e.message;}
     }
+    setInterval(render,250);setInterval(refresh,10000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+    refresh();render();
+})();
 </script>
 {% endblock %}

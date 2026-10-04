@@ -5,42 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StudyFlow – Quản Lý Học Tập Thông Minh Có AI Gợi Ý Lịch{% endblock %}</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="{% static 'js/tailwind.js' %}"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                            950: '#172554',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'card': '0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07)',
-                        'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-                    },
-                    borderRadius: {
-                        'xl': '0.875rem',
-                        '2xl': '1.25rem',
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -50,7 +15,7 @@
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        @media (max-width: 767px) {
+        @media (max-width: 1023px) {
             .sidebar-open { transform: translateX(0) !important; }
             .sidebar-overlay { display: block !important; }
         }
@@ -59,6 +24,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="h-full flex flex-col text-slate-800 antialiased">
+    <a class="skip-link" href="#mainContent">Đến nội dung chính</a>
 
     {% include 'components/navbar.html' %}
 
@@ -70,8 +36,8 @@
             {% include 'components/sidebar.html' %}
         {% endif %}
 
-        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" id="mainContent">
-            <div class="max-w-7xl mx-auto">
+        <main class="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 lg:p-8" id="mainContent" tabindex="-1">
+            <div class="w-full min-w-0">
                 {% include 'components/messages.html' %}
                 {% block content %}{% endblock %}
             </div>
@@ -91,14 +57,28 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         const mainContent = document.getElementById('mainContent');
+        function updateSidebarAccess() {
+            const mobile = window.innerWidth < 1024;
+            const open = sidebar?.classList.contains('sidebar-open');
+            if (sidebar) sidebar.inert = mobile && !open;
+            if (mainContent) mainContent.inert = mobile && !!open;
+        }
 
         function toggleSidebar() {
             if (sidebar && sidebarOverlay) {
                 sidebar.classList.toggle('sidebar-open');
                 sidebarOverlay.classList.toggle('sidebar-overlay');
                 document.body.classList.toggle('overflow-hidden');
+                sidebarToggle?.setAttribute('aria-expanded', sidebar.classList.contains('sidebar-open'));
+                updateSidebarAccess();
+                if (sidebar.classList.contains('sidebar-open')) sidebar.querySelector('a')?.focus();
             }
         }
+        updateSidebarAccess();
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024 && sidebar?.classList.contains('sidebar-open')) toggleSidebar();
+            updateSidebarAccess();
+        });
 
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', toggleSidebar);
@@ -111,12 +91,25 @@
         if (sidebar) {
             sidebar.querySelectorAll('a').forEach(link => {
                 link.addEventListener('click', () => {
-                    if (window.innerWidth < 768) {
+                    if (window.innerWidth < 1024 && sidebar.classList.contains('sidebar-open')) {
                         toggleSidebar();
                     }
                 });
             });
         }
+    </script>
+    <script>
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && sidebar?.classList.contains('sidebar-open')) {
+                toggleSidebar(); sidebarToggle?.focus();
+            }
+        });
+        document.querySelectorAll('[data-loading-form]').forEach(form => {
+            form.addEventListener('submit', () => {
+                const button = form.querySelector('button[type="submit"], button:not([type])');
+                if (button) { button.disabled = true; button.textContent = 'Đang xử lý…'; }
+            });
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

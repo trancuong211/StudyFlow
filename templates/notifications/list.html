@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Nhắc việc – StudyFlow{% endblock %}
+
+{% block content %}
+    <div class="w-full space-y-5">
+        <h1 class="text-2xl font-bold">Nhắc việc</h1>
+        <p class="text-slate-600">Deadline, phiên học sắp tới và tóm tắt ngày.</p>
+
+        {% for item in notifications %}
+            <article class="sf-card space-y-3 {% if not item.is_read %}border-brand-300{% endif %}">
+                <div class="flex flex-wrap justify-between gap-2">
+                    <h2 class="font-semibold">{{ item.title }}</h2>
+                    <span class="text-sm text-slate-600">
+                        {{ item.created_at|date:'H:i d/m' }} · {% if item.is_read %}Đã đọc{% else %}Chưa đọc{% endif %}
+                    </span>
+                </div>
+
+                <p class="whitespace-pre-line text-slate-700">{{ item.content }}</p>
+
+                <div class="flex flex-wrap gap-3">
+                    {% if item.task %}
+                        <a class="sf-secondary" href="{% url 'tasks:edit' item.task.pk %}">Xem công việc</a>
+                    {% endif %}
+
+                    {% if not item.is_read %}
+                        <form method="post" action="{% url 'notifications:read' item.pk %}">
+                            {% csrf_token %}
+                            <button class="sf-secondary" type="submit">Đánh dấu đã đọc</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <div class="sf-card">
+                Chưa có thông báo. Hệ thống sẽ nhắc khi deadline hoặc phiên học đến gần.
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

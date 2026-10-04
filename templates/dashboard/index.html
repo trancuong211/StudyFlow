@@ -95,14 +95,18 @@
                 </p>
                 {% endif %}
             </div>
-            <a href="{% url 'ai_assistant:generate_insight' %}" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium border border-white/20 transition-colors whitespace-nowrap self-start sm:self-center">
-                Phân tích lại
-            </a>
+            <form method="post" action="{% url 'ai_assistant:generate_insight' %}" data-loading-form>{% csrf_token %}<button class="sf-secondary">Phân tích lại</button></form>
         </div>
     </div>
     {% endif %}
 
     <!-- Main Grid -->
+    <section class="sf-card space-y-3">
+        <div class="flex flex-wrap justify-between gap-3 items-center"><h2 class="font-semibold text-lg">Kế hoạch hôm nay</h2><form method="post" action="{% url 'ai_assistant:daily_summary' %}" data-loading-form>{% csrf_token %}<button class="sf-secondary">Cập nhật tóm tắt</button></form></div>
+        {% if daily_summary %}<p class="text-slate-700">{{ daily_summary.content }}</p>{% else %}<p class="text-slate-600">Tạo tóm tắt để xem các ưu tiên trong ngày.</p>{% endif %}
+        <p class="text-sm text-slate-600">{{ habits.advice }}</p>
+        {% if unread_count %}<a class="text-brand-700 font-medium" href="{% url 'notifications:list' %}">{{ unread_count }} nhắc việc chưa đọc</a>{% endif %}
+    </section>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Urgent Deadlines -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -211,37 +215,15 @@
                 <h2 class="font-semibold text-slate-900">Tiến độ tuần này</h2>
             </div>
         </div>
-        <!-- Simple CSS bar chart: Thứ 2 → Chủ nhật -->
-        <div class="flex items-end justify-between gap-2 sm:gap-3 h-32" role="img" aria-label="Biểu đồ tiến độ học tập trong tuần">
-            <!-- Values are placeholder heights; no backend data for this -->
-            <div class="flex-1 flex flex-col items-center gap-1.5">
-                <div class="w-full bg-brand-100 rounded-t-md relative overflow-hidden h-full flex items-end"><div class="w-full bg-brand-500 rounded-t-md transition-all duration-500" style="height: 60%"></div></div>
-                <span class="text-[10px] text-slate-400 font-medium">T2</span>
+        <p class="text-sm text-slate-600 mb-4">7 ngày gần nhất · phút tập trung thực tế / mục tiêu ngày</p>
+        <div class="flex items-end justify-between gap-2 h-36" aria-label="Tiến độ học 7 ngày gần nhất">
+            {% for day in habits.week %}
+            <div class="flex-1 flex flex-col items-center gap-1 h-full">
+                <span class="text-xs font-semibold">{{ day.minutes }}p</span>
+                <div class="w-full bg-brand-50 rounded-t-md flex-1 flex items-end"><div class="w-full bg-brand-500 rounded-t-md" style="height:{{ day.percent }}%"></div></div>
+                <span class="text-[10px] text-slate-600">{{ day.label }}</span>
             </div>
-            <div class="flex-1 flex flex-col items-center gap-1.5">
-                <div class="w-full bg-brand-100 rounded-t-md relative overflow-hidden h-full flex items-end"><div class="w-full bg-brand-500 rounded-t-md transition-all duration-500" style="height: 80%"></div></div>
-                <span class="text-[10px] text-slate-400 font-medium">T3</span>
-            </div>
-            <div class="flex-1 flex flex-col items-center gap-1.5">
-                <div class="w-full bg-brand-100 rounded-t-md relative overflow-hidden h-full flex items-end"><div class="w-full bg-brand-500 rounded-t-md transition-all duration-500" style="height: 45%"></div></div>
-                <span class="text-[10px] text-slate-400 font-medium">T4</span>
-            </div>
-            <div class="flex-1 flex flex-col items-center gap-1.5">
-                <div class="w-full bg-brand-100 rounded-t-md relative overflow-hidden h-full flex items-end"><div class="w-full bg-brand-500 rounded-t-md transition-all duration-500" style="height: 70%"></div></div>
-                <span class="text-[10px] text-slate-400 font-medium">T5</span>
-            </div>
-            <div class="flex-1 flex flex-col items-center gap-1.5">
-                <div class="w-full bg-brand-100 rounded-t-md relative overflow-hidden h-full flex items-end"><div class="w-full bg-brand-500 rounded-t-md transition-all duration-500" style="height: 90%"></div></div>
-                <span class="text-[10px] text-slate-400 font-medium">T6</span>
-            </div>
-            <div class="flex-1 flex flex-col items-center gap-1.5">
-                <div class="w-full bg-brand-100 rounded-t-md relative overflow-hidden h-full flex items-end"><div class="w-full bg-brand-500 rounded-t-md transition-all duration-500" style="height: 35%"></div></div>
-                <span class="text-[10px] text-slate-400 font-medium">T7</span>
-            </div>
-            <div class="flex-1 flex flex-col items-center gap-1.5">
-                <div class="w-full bg-brand-100 rounded-t-md relative overflow-hidden h-full flex items-end"><div class="w-full bg-brand-500 rounded-t-md transition-all duration-500" style="height: 50%"></div></div>
-                <span class="text-[10px] text-slate-400 font-medium">CN</span>
-            </div>
+            {% endfor %}
         </div>
     </div>
 </div>

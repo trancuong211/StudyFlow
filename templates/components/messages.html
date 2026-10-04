@@ -1,5 +1,5 @@
 {% if messages %}
-<div class="fixed top-4 right-4 z-50 flex flex-col space-y-2 w-full max-w-sm sm:max-w-md" role="region" aria-live="polite" aria-label="Thông báo">
+<div class="fixed top-4 inset-x-4 z-50 flex flex-col space-y-2" role="region" aria-live="polite" aria-label="Thông báo">
     {% for message in messages %}
     <div class="alert-dismissible flex items-start space-x-3 p-4 rounded-xl shadow-lg border animate-slide-in
         {% if message.tags == 'error' %}

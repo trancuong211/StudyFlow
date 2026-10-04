@@ -61,7 +61,7 @@ class SmokePageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertNotIn('calendar_sync:sync', content)
-        self.assertIn(reverse('calendar_sync:connect'), content)
+        self.assertIn(reverse('calendar_sync:settings'), content)
 
     def test_sidebar_overlay_hidden_by_default(self):
         """Mục 10: overlay không còn class sidebar-overlay ở trạng thái mặc định."""
