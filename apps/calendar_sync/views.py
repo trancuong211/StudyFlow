@@ -1,9 +1,16 @@
 import os
+from django.core.exceptions import ValidationError
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from google_auth_oauthlib.flow import Flow
 from .models import GoogleCalendarToken
+from django.shortcuts import render
+from django.views.decorators.http import require_POST
+from django.utils import timezone
+from datetime import timezone as dt_timezone
+from .services import sync_calendar
+from .models import GoogleCalendarEvent, CalendarExport
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 DEFAULT_REDIRECT_URI = 'http://localhost:8000/calendar/oauth2callback/'
@@ -15,7 +22,7 @@ def _client_config():
     """Cấu hình OAuth2 từ biến môi trường (không có secret thì trả về None)."""
     client_id = os.getenv('GOOGLE_CLIENT_ID', '')
     client_secret = os.getenv('GOOGLE_CLIENT_SECRET', '')
-    if not client_id or not client_secret:
+    if not client_id or not client_secret or client_id.startswith('your-') or client_secret.startswith('your-'):
         return None
     return {
         'web': {
@@ -55,8 +62,8 @@ def connect_google(request):
             include_granted_scopes='true',
             prompt='consent',
         )
-    except Exception as e:
-        messages.error(request, f'Không thể khởi tạo phiên kết nối Google: {e}')
+    except Exception:
+        messages.error(request, 'Không thể khởi tạo phiên kết nối Google. Kiểm tra cấu hình OAuth.')
         return redirect('scheduler:calendar')
 
     request.session['google_oauth_state'] = state
@@ -97,28 +104,73 @@ def oauth2callback(request):
     try:
         flow = Flow.from_client_config(client_config=client_config, scopes=SCOPES, state=state)
         flow.redirect_uri = _redirect_uri()
-        flow.fetch_token(code=code)
+        flow.fetch_token(code=code, timeout=10)
         credentials = flow.credentials
-    except Exception as e:
-        messages.error(request, f'Không thể kết nối tài khoản Google: {e}')
+    except Exception:
+        messages.error(request, 'Không thể kết nối tài khoản Google. Kiểm tra cấu hình OAuth và thử lại.')
         return redirect('dashboard:index')
 
     if not credentials or not credentials.token:
         messages.error(request, 'Không thể kết nối tài khoản Google: Không nhận được access token.')
         return redirect('dashboard:index')
 
-    GoogleCalendarToken.objects.update_or_create(
-        user=request.user,
-        defaults={
+    existing = GoogleCalendarToken.objects.defer('access_token', 'refresh_token', 'client_secret').filter(user=request.user).first()
+    try:
+        old_refresh = existing.refresh_token if existing else ''
+    except ValidationError:
+        old_refresh = ''
+    defaults = {
             'access_token': credentials.token,
-            'refresh_token': credentials.refresh_token or '',
+            'refresh_token': credentials.refresh_token or old_refresh,
+            'expiry': credentials.expiry.replace(tzinfo=dt_timezone.utc) if credentials.expiry else None,
             'token_uri': credentials.token_uri or GOOGLE_TOKEN_URI,
             'client_id': credentials.client_id or os.getenv('GOOGLE_CLIENT_ID', ''),
             'client_secret': credentials.client_secret or os.getenv('GOOGLE_CLIENT_SECRET', ''),
             'scopes': ' '.join(credentials.scopes or SCOPES),
         }
-    )
+    if existing:
+        for field, value in defaults.items():
+            setattr(existing, field, value)
+        existing.save()
+    else:
+        GoogleCalendarToken.objects.create(user=request.user, **defaults)
     request.user.is_google_connected = True
     request.user.save(update_fields=['is_google_connected'])
     messages.success(request, 'Đã kết nối thành công tài khoản Google Calendar!')
     return redirect('dashboard:index')
+
+
+@login_required
+def calendar_settings(request):
+    return render(request, 'calendar_sync/settings.html', {
+        'token': GoogleCalendarToken.objects.defer('access_token', 'refresh_token', 'client_secret').filter(user=request.user).first(),
+        'event_count': GoogleCalendarEvent.objects.filter(user=request.user).count(),
+        'configured': _client_config() is not None,
+    })
+
+
+@login_required
+@require_POST
+def sync_now(request):
+    if not GoogleCalendarToken.objects.filter(user=request.user).exists():
+        messages.error(request, 'Hãy kết nối Google Calendar trước.')
+    else:
+        try:
+            result = sync_calendar(request.user)
+            messages.success(request, f"Đã nhập {result['imported']} sự kiện bận và xuất {result['exported']} khung học. Hãy kiểm tra xung đột và lập lại lịch nếu cần.")
+        except Exception:
+            messages.error(request, 'Không thể đồng bộ Google. Kiểm tra kết nối, quyền Calendar hoặc kết nối lại tài khoản.')
+    return redirect('calendar_sync:settings')
+
+
+@login_required
+@require_POST
+def disconnect(request):
+    # Disconnect locally; existing exported events remain in Google.
+    GoogleCalendarToken.objects.filter(user=request.user).delete()
+    GoogleCalendarEvent.objects.filter(user=request.user).delete()
+    CalendarExport.objects.filter(user=request.user).delete()
+    request.user.is_google_connected = False
+    request.user.save(update_fields=['is_google_connected'])
+    messages.success(request, 'Đã ngắt kết nối. Sự kiện đã xuất vẫn được giữ trong Google Calendar.')
+    return redirect('calendar_sync:settings')

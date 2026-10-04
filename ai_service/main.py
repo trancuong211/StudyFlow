@@ -8,13 +8,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Internal server-to-server API: no browser CORS access is required.
 
 app.include_router(ai_router)
 
