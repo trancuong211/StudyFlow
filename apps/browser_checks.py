@@ -5,12 +5,14 @@ Requires requirements-dev.txt and `python -m playwright install chromium`.
 """
 
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.db import connections
 from django.test import override_settings
 from django.utils import timezone
 from playwright.sync_api import expect, sync_playwright
@@ -83,6 +85,15 @@ class BrowserChecks(StaticLiveServerTestCase):
                 user=self.user, google_id="synthetic-overnight", title="Sự kiện lúc 1 giờ sáng",
                 start_time=morning, end_time=morning + timedelta(hours=1),
             )
+        if self._testMethodName == 'test_task5_red_warning_apply_and_move_proposals':
+            self.urgent = Task.objects.create(user=self.user, title='Nộp bài Python trong 36 giờ',
+                deadline=timezone.now()+timedelta(hours=36), estimated_duration=60)
+            self.moving = Task.objects.create(user=self.user, title='Dời buổi ôn tập trùng ca làm',
+                deadline=timezone.now()+timedelta(hours=48), estimated_duration=60)
+            self.move_start = timezone.localtime(timezone.now()+timedelta(days=1)).replace(hour=10, minute=0, second=0, microsecond=0)
+            self.move_block = ScheduleBlock.objects.create(user=self.user, task=self.moving, title='Buổi ôn tập',
+                start_time=self.move_start, end_time=self.move_start+timedelta(hours=1), is_auto_generated=True)
+            BusyPeriod.objects.create(user=self.user, title='Ca làm', start_time=self.move_start, end_time=self.move_start+timedelta(hours=1))
         self.runtime = sync_playwright().start()
         self.addCleanup(self.runtime.stop)
         self.browser = self.runtime.chromium.launch()
@@ -260,4 +271,47 @@ class BrowserChecks(StaticLiveServerTestCase):
         self.page.get_by_role("button", name="Đánh dấu đã đọc").click()
         self.page.wait_for_load_state("networkidle")
         expect(self.page.get_by_role("button", name="Đánh dấu đã đọc")).to_have_count(0)
+        self.assertEqual(self.errors, [])
+
+    def test_task5_red_warning_apply_and_move_proposals(self):
+        urgent, moving = self.urgent, self.moving
+        self.login()
+        self.goto('/tasks/')
+        expect(self.page.locator(f'[data-task-risk="{urgent.pk}"] [data-risk-level="HIGH"]')).to_be_visible()
+        self.goto('/ai/')
+        card = self.page.locator(f'#task-risk-{urgent.pk}')
+        expect(card.locator('[data-risk-level="HIGH"]')).to_be_visible()
+        expect(card.get_by_role('button', name='Áp dụng khung học')).to_be_visible()
+        artifacts = Path('test-results/task5')
+        artifacts.mkdir(parents=True, exist_ok=True)
+        for width in (375, 1440):
+            self.page.set_viewport_size({'width': width, 'height': 1100})
+            if width < 1024:
+                expect(self.page.locator('#sidebar')).not_to_be_in_viewport()
+            else:
+                expect(self.page.locator('#sidebar')).to_be_in_viewport()
+            sizes = self.page.evaluate('() => [window.innerWidth, document.documentElement.scrollWidth]')
+            self.assertLessEqual(sizes[1], sizes[0]+1)
+            self.page.screenshot(path=str(artifacts/f'risk-proposals-{width}.png'), full_page=True)
+        card.screenshot(path=str(artifacts/'demo-risk-card.png'))
+        card.get_by_role('button', name='Áp dụng khung học').click()
+        self.page.wait_for_load_state('networkidle')
+        expect(self.page.locator(f'#task-risk-{urgent.pk} [data-risk-level="LOW"]')).to_be_visible()
+        def read_block(task_id):
+            try:
+                return ScheduleBlock.objects.get(task_id=task_id)
+            finally:
+                connections.close_all()
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            accepted = executor.submit(read_block, urgent.pk).result()
+        self.assertTrue(accepted.is_locked)
+        moving_card = self.page.locator(f'#task-risk-{moving.pk}')
+        moving_card.get_by_role('button', name='Áp dụng dời lịch').click()
+        self.page.wait_for_load_state('networkidle')
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            block = executor.submit(read_block, moving.pk).result()
+        self.assertNotEqual(block.start_time, self.move_start)
+        self.assertEqual(block.duration_minutes, 60)
+        self.assertTrue(block.is_locked)
+        self.page.screenshot(path=str(artifacts/'after-apply-desktop.png'), full_page=True)
         self.assertEqual(self.errors, [])

@@ -1,0 +1,6 @@
+<span data-risk-level="{{ risk.risk_level }}" class="text-[11px] font-medium px-2 py-0.5 rounded-md border
+    {% if risk.risk_level == 'HIGH' or risk.risk_level == 'CRITICAL' %}bg-red-50 text-red-700 border-red-200
+    {% elif risk.risk_level == 'MEDIUM' %}bg-amber-50 text-amber-700 border-amber-200
+    {% else %}bg-emerald-50 text-emerald-700 border-emerald-200{% endif %}">
+    Rủi ro {{ risk.label }} · {{ risk.score }}/100
+</span>
