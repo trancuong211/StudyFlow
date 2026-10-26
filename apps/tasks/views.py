@@ -103,8 +103,11 @@ def task_list(request):
     if query:
         tasks = tasks.filter(title__icontains=query)
     tasks = list(tasks)
+    from apps.ai_assistant.planning import current_task_risks
+    risks = {item['task_id']: item for item in current_task_risks(request.user)} if tasks else {}
     for task in tasks:
         task.is_scheduled = task.status != Task.Status.COMPLETED and planned_minutes(task) >= remaining_minutes(task)
+        task.deadline_risk = risks.get(task.pk)
     return render(request, 'tasks/task_list.html', {
         'tasks': tasks,
         'status_filter': status_filter,

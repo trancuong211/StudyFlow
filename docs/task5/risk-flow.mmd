@@ -1,0 +1,32 @@
+flowchart TD
+    A[Task, deadline, thời gian đã học, lịch hợp lệ, giờ trống] --> B[R = max 0, ước tính - đã học; M = max 0, R - đã xếp]
+    B --> C{R bằng 0?}
+    C -- Có --> Z[Điểm 0; LOW]
+    C -- Không --> D{Đã quá deadline?}
+    D -- Có --> E[Điểm 100; CRITICAL]
+    D -- Không --> F[Khởi tạo điểm 0; q = M / R]
+    F --> G{M lớn hơn 0?}
+    G -- Có --> H[Điểm = 40 + ceil 19q]
+    H --> I{Deadline trong 48 giờ?}
+    I -- Có --> J[Điểm = max điểm, 70 + ceil 15q]
+    I -- Không --> K{C lớn hơn A?}
+    J --> K
+    K -- Có --> L["Điểm = max(điểm, 85 + ceil(14 × (C−A) / max(1,C)))"]
+    K -- Không --> O{Task có khung trong ngày quá tải?}
+    L --> O
+    G -- Không --> O
+    O -- Có --> P[Điểm = max điểm, 70]
+    O -- Không --> Q[Phân loại: dưới 30 LOW; dưới 70 MEDIUM; dưới 100 HIGH]
+    P --> Q
+    Z --> T[Hiển thị điểm, lý do và gợi ý giờ học nếu có]
+    E --> T
+    Q --> T
+    T --> U{Người dùng chọn áp dụng?}
+    U -- Không --> V[Giữ lịch hiện tại]
+    U -- Có --> W[Kiểm tra chữ ký, hạn 15 phút, quyền sở hữu và dữ liệu hiện tại]
+    W --> X{Còn hợp lệ và không trùng lịch?}
+    X -- Có --> Y[Lưu khung, khóa khung, cập nhật điểm]
+    X -- Không --> N[Từ chối; yêu cầu xem gợi ý mới]
+
+%% A: phút trống trước deadline, có giới hạn ngày; C: tổng phút chưa xếp của các việc đến mốc deadline.
+%% Điểm thể hiện mức cần ưu tiên, không phải xác suất trễ hạn.

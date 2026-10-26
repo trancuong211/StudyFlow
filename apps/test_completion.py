@@ -447,7 +447,10 @@ class CompletionTests(TestCase):
             url = reverse("resources:download", args=[item.pk])
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            response.close()
+            # Consume through Django's test-client iterator so it closes the file
+            # with close_old_connections temporarily disconnected. Calling
+            # response.close() directly closes PostgreSQL's TestCase transaction.
+            self.assertEqual(b''.join(response.streaming_content), b'%PDF notes')
             self.client.force_login(self.other)
             self.assertEqual(self.client.get(url).status_code, 404)
             self.assertEqual(

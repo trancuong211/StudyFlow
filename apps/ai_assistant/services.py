@@ -49,6 +49,14 @@ def planning_context(user):
     slots = optimizer.find_free_slots(optimizer.get_existing_busy_intervals())
     load = optimizer._daily_load()
     cap = user.daily_study_goal_hours*60
+    overloaded_days = {day for day, minutes in load.items() if minutes > cap}
+    overloaded_tasks = set()
+    for block in ScheduleBlock.objects.filter(user=user, start_time__lt=optimizer.window_end,
+                                               end_time__gt=now, task__isnull=False):
+        if any(block.start_time.astimezone(optimizer.zone).date() <= day
+               <= (block.end_time-timedelta(microseconds=1)).astimezone(optimizer.zone).date()
+               for day in overloaded_days):
+            overloaded_tasks.add(block.task_id)
     cumulative = 0
     tasks = []
     for task in Task.objects.filter(user=user).exclude(status='COMPLETED').order_by('deadline', '-priority')[:1000]:
@@ -62,7 +70,7 @@ def planning_context(user):
             'priority': task.get_priority_display(), 'estimated_duration': task.estimated_duration,
             'is_scheduled': planned >= remaining, 'remaining_minutes': remaining, 'planned_minutes': planned,
             'available_minutes': capacity if task.deadline <= optimizer.window_end else None,
-            'cumulative_unscheduled_minutes': cumulative})
+            'cumulative_unscheduled_minutes': cumulative, 'overloaded': task.pk in overloaded_tasks})
     habits = habit_analysis(user)
     habits['overloaded_days'] = [day.isoformat() for day, minutes in load.items() if minutes > cap]
     return {'user_id': user.pk, 'current_time': now.isoformat(), 'tasks': tasks, 'habits': habits}
@@ -104,7 +112,8 @@ class AIServiceBridge:
         result = cls._request('analyze-risks', payload, RiskAnalysisResponse, baseline)
         return AIInsight.objects.create(user=user, insight_type=kind, title=result.title[:200],
             content=result.summary, actionable_advice=result.advice, risk_level=baseline.risk_level,
-            source=result.source, context_fingerprint=fingerprint, details={'habits': payload['habits']})
+            source=result.source, context_fingerprint=fingerprint, details={'habits': payload['habits'],
+                'task_risks': [item.model_dump() for item in baseline.task_risks]})
 
     @classmethod
     def daily_summary(cls, user):

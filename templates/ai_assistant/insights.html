@@ -1,8 +1,40 @@
-{% extends 'base.html' %}{% block title %}Phân tích & gợi ý – StudyFlow{% endblock %}
+{% extends 'base.html' %}{% load static %}{% block title %}Phân tích & gợi ý – StudyFlow{% endblock %}
 {% block content %}<div class="space-y-5">
 <div class="flex flex-wrap justify-between items-center gap-4"><div><h1 class="text-2xl font-bold">Phân tích & gợi ý học tập</h1><p class="text-slate-600 mt-1">Rủi ro dựa trên deadline, tiến độ và thời gian còn trống.</p></div><div class="flex flex-wrap gap-3">
 <form method="post" action="{% url 'ai_assistant:generate_insight' %}" data-loading-form>{% csrf_token %}<button class="sf-button">Phân tích deadline</button></form><form method="post" action="{% url 'ai_assistant:daily_summary' %}" data-loading-form>{% csrf_token %}<button class="sf-secondary">Tóm tắt hôm nay</button></form></div></div>
 <section class="sf-card space-y-2"><h2 class="text-lg font-semibold">Thói quen trong 30 ngày</h2><p class="text-slate-700">{{ habits.advice }}</p><p class="text-sm text-slate-600">{{ habits.sessions_count }} phiên tập trung · {{ habits.focus_minutes }} phút. Đây là tần suất học quan sát được, chưa phải phép đo hiệu quả học.</p></section>
+<section class="space-y-4" aria-labelledby="task-risk-heading">
+    <div><h2 id="task-risk-heading" class="text-lg font-semibold">Rủi ro từng công việc & gợi ý giờ học</h2>
+    <p class="text-sm text-slate-600 mt-1">Điểm 0–100 thể hiện mức cần ưu tiên, không phải xác suất trễ hạn. Gợi ý có hiệu lực 15 phút và chỉ đổi lịch khi bạn chọn áp dụng.</p>
+    <details class="mt-2 text-sm text-slate-600"><summary class="cursor-pointer min-h-11 py-2">Cách tính điểm rủi ro</summary>
+    <p>Quá hạn: 100. Thiếu sức chứa: 86–99. Thiếu lịch trong 48 giờ: 71–85. Ngày quá tải: tối thiểu 70. Thiếu lịch ngoài 48 giờ: 41–59. Đủ lịch hợp lệ: 0. Điều kiện cao nhất quyết định điểm.</p>
+    <a href="{% static 'diagrams/task5-risk-flow.svg' %}" class="inline-flex items-center min-h-11 underline text-brand-700" target="_blank" rel="noopener">Xem lưu đồ tính điểm</a></details></div>
+    {% for risk in risk_cards %}
+    <article id="task-risk-{{ risk.task_id }}" class="sf-card space-y-3" data-task-risk="{{ risk.task_id }}">
+        <div class="flex flex-wrap items-center justify-between gap-3"><h3 class="font-semibold">{{ risk.title }}</h3>{% include 'ai_assistant/risk_badge.html' %}</div>
+        <ul class="list-disc pl-5 text-sm text-slate-700">{% for reason in risk.reasons %}<li>{{ reason }}</li>{% endfor %}</ul>
+        {% if risk.proposal %}
+        <div class="border-t border-slate-100 pt-4 space-y-3">
+            <p class="text-sm font-medium text-slate-900">{% if risk.proposal.kind == 'move' %}Đề xuất dời khung học{% else %}Đề xuất bổ sung khung học{% endif %}</p>
+            {% if risk.proposal.original_start %}<p class="text-sm text-slate-600">Lịch cũ: {{ risk.proposal.original_start|date:'H:i d/m/Y' }} – {{ risk.proposal.original_end|date:'H:i d/m/Y' }}</p>{% endif %}
+            <p class="text-sm text-slate-700">Từ <span class="font-medium">{{ risk.proposal.start|date:'H:i d/m/Y' }}</span> đến <span class="font-medium">{{ risk.proposal.end|date:'H:i d/m/Y' }}</span> · {{ risk.proposal.minutes }} phút</p>
+            <p class="text-sm text-slate-600">{{ risk.proposal.reason }}{% if risk.proposal.partial %} Đây là một phần thời lượng thiếu; áp dụng xong để xem gợi ý tiếp theo.{% endif %}</p>
+            <div class="flex flex-wrap items-center gap-3">
+                <form method="post" action="{% url 'ai_assistant:apply_suggestion' %}" data-loading-form>{% csrf_token %}
+                    <input type="hidden" name="token" value="{{ risk.proposal.token }}">
+                    <button type="submit" class="sf-button">Áp dụng {% if risk.proposal.kind == 'move' %}dời lịch{% else %}khung học{% endif %}</button>
+                </form>
+                <a class="sf-secondary" href="{% url 'scheduler:calendar' %}">Mở calendar</a>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-600">{% if risk.risk_level == 'LOW' %}Chưa cần bổ sung lịch.{% elif risk.risk_level == 'CRITICAL' %}Đã quá hạn: hãy xem lại phạm vi và thống nhất deadline mới.{% else %}Không tìm được khung phù hợp để tự động đề xuất. Hãy chỉnh giờ học, lịch bận hoặc khung thủ công/đã khóa trên calendar.{% endif %}</p>
+        <a class="sf-secondary" href="{% url 'scheduler:calendar' %}">Mở calendar</a>
+        {% endif %}
+    </article>
+    {% empty %}<p class="sf-card">Chưa có công việc đang làm để phân tích. Thêm công việc có deadline trước.</p>{% endfor %}
+    {% if extra_risks %}<p class="text-sm text-slate-600">Đang hiển thị 20 công việc ưu tiên cao nhất. Còn {{ extra_risks }} công việc; xem điểm của từng việc ở danh sách công việc.</p>{% endif %}
+</section>
 {% for insight in insights %}<article class="sf-card space-y-4"><div class="flex flex-wrap justify-between gap-3"><div><p class="text-sm text-slate-600">{{ insight.get_insight_type_display }} · {{ insight.created_at|date:'H:i d/m/Y' }}</p><h2 class="text-xl font-semibold mt-1">{{ insight.title }}</h2></div><div class="text-sm text-right"><p class="font-semibold {% if insight.risk_level == 'CRITICAL' or insight.risk_level == 'HIGH' %}text-red-700{% elif insight.risk_level == 'MEDIUM' %}text-amber-800{% else %}text-emerald-700{% endif %}">{% if insight.insight_type == 'DEADLINE_RISK' %}Rủi ro: {{ insight.risk_level }}{% endif %}</p><p class="text-slate-600">{% if insight.source == 'openai' %}AI hỗ trợ diễn giải{% else %}Phân tích theo dữ liệu & quy tắc{% endif %}</p></div></div>
 <p class="whitespace-pre-line text-slate-700">{{ insight.content }}</p>
 {% if insight.details.priorities %}<ul class="list-disc pl-5 text-slate-700">{% for title in insight.details.priorities %}<li>{{ title }}</li>{% endfor %}</ul>{% endif %}

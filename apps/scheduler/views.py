@@ -49,15 +49,22 @@ def api_events(request):
         return JsonResponse({'message': 'Khoảng xem lịch không hợp lệ (tối đa 95 ngày).'}, status=400)
     events = []
     busy = busy_intervals(request.user, start, end)
+    from apps.ai_assistant.planning import current_task_risks
+    risks = {risk['task_id']: risk for risk in current_task_risks(request.user)}
     for b in ScheduleBlock.objects.filter(user=request.user, start_time__lt=end, end_time__gt=start).select_related('task__course'):
         color = b.task.course.color if b.task and b.task.course else '#2563eb'
         conflict = any(a < b.end_time and finish > b.start_time for a, finish in busy)
-        if conflict:
+        risk = risks.get(b.task_id)
+        high_risk = risk and risk['risk_level'] in ('HIGH', 'CRITICAL')
+        if conflict or high_risk:
             color = '#b91c1c'
-        events.append({'id': b.pk, 'title': ('⚠ ' if conflict else '') + b.title, 'start': b.start_time.isoformat(), 'end': b.end_time.isoformat(),
+        risk_note = f"Rủi ro {risk['label']} ({risk['score']}/100). " if risk else ''
+        events.append({'id': b.pk, 'title': ('⚠ ' if conflict or high_risk else '') + b.title, 'start': b.start_time.isoformat(), 'end': b.end_time.isoformat(),
             'backgroundColor': color, 'borderColor': '#1e3a8a' if b.is_locked else color,
             'extendedProps': {'taskId': b.task_id, 'isLocked': b.is_locked, 'isAuto': b.is_auto_generated,
-                              'notes': ('Trùng lịch bận / Google Calendar. Hãy chỉnh khung hoặc lập lại lịch. ' if conflict else '') + b.notes,
+                              'riskScore': risk['score'] if risk else None,
+                              'riskLevel': risk['risk_level'] if risk else None,
+                              'notes': risk_note + ('Trùng lịch bận / Google Calendar. Hãy chỉnh khung hoặc lập lại lịch. ' if conflict else '') + b.notes,
                               'hasConflict': conflict, 'kind': 'study'}})
     for period in BusyPeriod.objects.filter(user=request.user, start_time__lt=end).select_related('user'):
         for a, b in recurring_intervals(period, start, end):
