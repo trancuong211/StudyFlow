@@ -1,5 +1,7 @@
 from django.contrib import admin
 from .models import ScheduleBlock
+from .models import BusyPeriod
+admin.site.register(BusyPeriod)
 
 @admin.register(ScheduleBlock)
 class ScheduleBlockAdmin(admin.ModelAdmin):

@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.utils import timezone
 from apps.courses.models import Course
@@ -42,7 +43,7 @@ class Task(models.Model):
     description = models.TextField('Chi tiết công việc', blank=True)
     priority = models.IntegerField('Độ ưu tiên', choices=Priority.choices, default=Priority.MEDIUM)
     estimated_duration = models.PositiveIntegerField(
-        'Thời lượng ước tính (phút)', default=60, help_text='Ước tính số phút cần để hoàn thành'
+        'Thời lượng ước tính (phút)', default=60, validators=[MinValueValidator(1), MaxValueValidator(100000)], help_text='Ước tính số phút cần để hoàn thành'
     )
     deadline = models.DateTimeField('Thời hạn (Deadline)')
     status = models.CharField('Trạng thái', max_length=20, choices=Status.choices, default=Status.TODO)
@@ -79,3 +80,7 @@ class Task(models.Model):
         else:
             self.completed_at = None
         super().save(*args, **kwargs)
+        if self.status == self.Status.COMPLETED:
+            self.schedule_blocks.filter(start_time__gte=timezone.now()).delete()
+            type(self).objects.filter(pk=self.pk).update(is_scheduled=False)
+            self.is_scheduled = False

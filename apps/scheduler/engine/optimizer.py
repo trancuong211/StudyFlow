@@ -1,145 +1,102 @@
-from datetime import datetime, timedelta, time
+from collections import defaultdict
+from datetime import datetime, time, timedelta
+from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.utils import timezone
+from apps.accounts.timezones import user_zone
 from apps.tasks.models import Task
 from apps.scheduler.models import ScheduleBlock
+from apps.scheduler.availability import busy_intervals
+from apps.scheduler.progress import remaining_minutes, planned_minutes, refresh_scheduled
+
 
 class ScheduleOptimizer:
-    """
-    Thuật toán lập lịch thông minh (Constraint & Greedy Scheduling Engine).
-    Sắp xếp các task cần làm vào các khoảng thời gian trống (free slots) phù hợp:
-    1. Lấy tất cả task chưa hoàn thành và chưa được xếp lịch (hoặc xếp lại các block chưa lock).
-    2. Bảo toàn tuyệt đối các block đã bị KHÓA (is_locked=True).
-    3. Ưu tiên task: Earliest Deadline First (EDF) kết hợp Trọng số Priority (Khẩn cấp -> Cao -> Trung bình -> Thấp).
-    4. Tìm kiếm khung giờ học khả thi (mặc định 08:00 - 22:00, ngắt quãng nghỉ).
-    """
-
-    def __init__(self, user, start_date=None, days_ahead=7, study_hours=(8, 22)):
+    """EDF greedy scheduler with weekly availability, daily caps and preserved edits."""
+    def __init__(self, user, start_date=None, days_ahead=7, study_hours=None):
         self.user = user
-        self.start_date = start_date or timezone.localdate()
-        self.days_ahead = days_ahead
-        self.study_start_hour, self.study_end_hour = study_hours
+        self.zone = user_zone(user)
+        self.start_date = start_date or timezone.localdate(timezone=user_zone(user))
+        self.days_ahead = min(max(int(days_ahead), 1), 31)
+        self.study_start_hour, self.study_end_hour = study_hours or (user.study_start_hour, user.study_end_hour)
+        self.window_start = datetime.combine(self.start_date, time.min, self.zone)
+        self.window_end = datetime.combine(self.start_date + timedelta(days=self.days_ahead), time.min, self.zone)
+        self.report = []
 
     def get_existing_busy_intervals(self):
-        """Lấy tất cả các khoảng thời gian bận (đã có block locked) trong khoảng xem xét."""
-        start_dt = timezone.make_aware(datetime.combine(self.start_date, time(0, 0)))
-        end_dt = start_dt + timedelta(days=self.days_ahead)
+        blocks = ScheduleBlock.objects.filter(user=self.user, start_time__lt=self.window_end,
+                                               end_time__gt=self.window_start)
+        intervals = [(b.start_time - timedelta(minutes=15), b.end_time + timedelta(minutes=15)) for b in blocks]
+        return intervals + busy_intervals(self.user, self.window_start, self.window_end)
 
-        locked_blocks = ScheduleBlock.objects.filter(
-            user=self.user,
-            is_locked=True,
-            start_time__gte=start_dt,
-            end_time__lte=end_dt
-        ).order_by('start_time')
-
-        busy_intervals = []
-        for b in locked_blocks:
-            busy_intervals.append((b.start_time, b.end_time))
-        return busy_intervals
-
-    def find_free_slots(self, busy_intervals):
-        """Tìm các khoảng thời gian trống theo từng ngày trong khung giờ học."""
-        free_slots = []
-        current_time = timezone.now()
-
-        for day_offset in range(self.days_ahead):
-            current_day = self.start_date + timedelta(days=day_offset)
-            day_start = timezone.make_aware(datetime.combine(current_day, time(self.study_start_hour, 0)))
-            day_end = timezone.make_aware(datetime.combine(current_day, time(self.study_end_hour, 0)))
-
-            # Nếu là ngày hôm nay, chỉ xếp từ thời điểm hiện tại + 15 phút
-            if current_day == timezone.localdate():
-                earliest_start = current_time + timedelta(minutes=15)
-                if earliest_start > day_start:
-                    day_start = earliest_start
-
-            if day_start >= day_end:
+    def find_free_slots(self, intervals):
+        slots = []
+        earliest = timezone.now() + timedelta(minutes=15)
+        for offset in range(self.days_ahead):
+            day = self.start_date + timedelta(days=offset)
+            start = max(datetime.combine(day, time(self.study_start_hour), self.zone), earliest)
+            end = datetime.combine(day, time(self.study_end_hour), self.zone)
+            if start >= end:
                 continue
+            cursor = start
+            for a, b in sorted((max(start, a), min(end, b)) for a, b in intervals if a < end and b > start):
+                if a > cursor:
+                    slots.append((cursor, a))
+                cursor = max(cursor, b)
+            if cursor < end:
+                slots.append((cursor, end))
+        return slots
 
-            # Lọc các block bận trùng với ngày này
-            day_busy = [
-                (max(day_start, b_start), min(day_end, b_end))
-                for b_start, b_end in busy_intervals
-                if b_start < day_end and b_end > day_start
-            ]
-            day_busy.sort(key=lambda x: x[0])
+    def _daily_load(self):
+        from apps.pomodoro.models import PomodoroSession
+        load = defaultdict(int)
+        for offset in range(self.days_ahead):
+            day = self.start_date + timedelta(days=offset)
+            start = datetime.combine(day, time.min, self.zone)
+            end = datetime.combine(day + timedelta(days=1), time.min, self.zone)
+            for b in ScheduleBlock.objects.filter(user=self.user,
+                                                   start_time__lt=end, end_time__gt=max(start, timezone.now())):
+                load[day] += max(0, int((min(b.end_time, end) - max(b.start_time, start, timezone.now())).total_seconds()/60))
+            load[day] += sum(PomodoroSession.objects.filter(user=self.user, completed=True, session_type='WORK',
+                            start_time__gte=start, start_time__lt=end).values_list('duration_minutes', flat=True))
+        return load
 
-            # Tính các khe trống (free slots)
-            slot_cursor = day_start
-            for b_start, b_end in day_busy:
-                if b_start > slot_cursor:
-                    free_slots.append((slot_cursor, b_start))
-                slot_cursor = max(slot_cursor, b_end)
-
-            if slot_cursor < day_end:
-                free_slots.append((slot_cursor, day_end))
-
-        return free_slots
-
+    @transaction.atomic
     def run(self):
-        """
-        Thực thi thuật toán lập lịch.
-        Xóa các block tự động cũ chưa lock, sau đó phân bổ các task vào khe trống.
-        """
-        # 1. Xóa các block tự động cũ chưa bị khóa
-        ScheduleBlock.objects.filter(
-            user=self.user,
-            is_auto_generated=True,
-            is_locked=False,
-            start_time__gte=timezone.now()
-        ).delete()
-
-        # 2. Lấy các task cần lập lịch
-        tasks = Task.objects.filter(
-            user=self.user,
-            status__in=[Task.Status.TODO, Task.Status.IN_PROGRESS]
-        ).order_by('deadline', '-priority')
-
-        busy_intervals = self.get_existing_busy_intervals()
-        free_slots = self.find_free_slots(busy_intervals)
-
-        created_blocks = []
-        slot_index = 0
-
+        get_user_model().objects.select_for_update().get(pk=self.user.pk)
+        now = timezone.now()
+        ScheduleBlock.objects.filter(user=self.user, is_auto_generated=True, is_locked=False,
+                                      start_time__gte=max(now, self.window_start), start_time__lt=self.window_end).delete()
+        tasks = list(Task.objects.filter(user=self.user, status__in=['TODO', 'IN_PROGRESS'])
+                     .order_by('deadline', '-priority', '-difficulty'))
+        slots = self.find_free_slots(self.get_existing_busy_intervals())
+        load = self._daily_load()
+        cap = self.user.daily_study_goal_hours * 60
+        created = []
+        self.report = []
         for task in tasks:
-            needed_minutes = task.estimated_duration or 60
-            while needed_minutes > 0 and slot_index < len(free_slots):
-                slot_start, slot_end = free_slots[slot_index]
-                slot_duration = int((slot_end - slot_start).total_seconds() / 60)
-
-                if slot_duration < 30:  # Khe quá nhỏ (< 30 phút), bỏ qua
-                    slot_index += 1
-                    continue
-
-                # Phân bổ tối đa 120 phút mỗi session để tránh kiệt sức
-                allocated_minutes = min(needed_minutes, slot_duration, 120)
-                block_end = slot_start + timedelta(minutes=allocated_minutes)
-
-                # Không xếp lịch vượt quá deadline của task
-                if block_end > task.deadline:
-                    # Task không kịp hoàn thành trước deadline trong slot này
+            needed = max(0, remaining_minutes(task) - planned_minutes(task, now))
+            for i, (start, end) in enumerate(slots):
+                if needed <= 0:
                     break
-
-                block = ScheduleBlock.objects.create(
-                    user=self.user,
-                    task=task,
-                    title=f"[Học] {task.title}",
-                    start_time=slot_start,
-                    end_time=block_end,
-                    is_auto_generated=True,
-                    is_locked=False,
-                )
-                created_blocks.append(block)
-                needed_minutes -= allocated_minutes
-
-                # Cập nhật lại slot hiện tại hoặc chuyển slot kế tiếp
-                if block_end + timedelta(minutes=15) < slot_end:
-                    # Nghỉ 15 phút trước block tiếp theo
-                    free_slots[slot_index] = (block_end + timedelta(minutes=15), slot_end)
-                else:
-                    slot_index += 1
-
-            if needed_minutes <= 0:
-                task.is_scheduled = True
-                task.save(update_fields=['is_scheduled'])
-
-        return created_blocks
+                if start >= end or start >= task.deadline:
+                    continue
+                day = start.astimezone(self.zone).date()
+                while needed > 0:
+                    available = int((min(end, task.deadline) - start).total_seconds()/60)
+                    allocation = min(needed, available, 120, max(0, cap-load[day]))
+                    if allocation <= 0 or (allocation < 15 and allocation < needed):
+                        break
+                    finish = start + timedelta(minutes=allocation)
+                    b = ScheduleBlock.objects.create(user=self.user, task=task, title=f'[Học] {task.title}',
+                            start_time=start, end_time=finish, is_auto_generated=True)
+                    created.append(b)
+                    needed -= allocation
+                    load[day] += allocation
+                    start = finish + timedelta(minutes=15)
+                    slots[i] = (start, end)
+            refresh_scheduled(task)
+            if needed:
+                self.report.append({'task_id': task.pk, 'title': task.title, 'missing_minutes': needed,
+                    'reason': 'Đã quá deadline' if task.deadline <= now else
+                              'Không đủ thời gian trước deadline trong khung giờ học và giới hạn mỗi ngày'})
+        return created

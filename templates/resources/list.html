@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Tài liệu ôn tập – StudyFlow{% endblock %}
+
+{% block content %}
+    <div class="space-y-5">
+        <div class="flex flex-wrap justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold">Tài liệu ôn tập</h1>
+                <p class="text-slate-600 mt-1">Lưu tài liệu và liên kết theo môn học hoặc công việc.</p>
+            </div>
+            <a class="sf-button" href="{% url 'resources:create' %}">Thêm tài liệu</a>
+        </div>
+
+        <form method="get" class="flex gap-3">
+            <label for="resource-search" class="sr-only">Tìm tài liệu</label>
+            <input id="resource-search" name="q" value="{{ query }}" placeholder="Tìm theo tên tài liệu">
+            <button class="sf-secondary" type="submit">Tìm</button>
+        </form>
+
+        {% for item in resources %}
+            <article class="sf-card space-y-3">
+                <div class="flex flex-wrap justify-between gap-3">
+                    <h2 class="font-semibold">{{ item.title }}</h2>
+                    <p class="text-sm text-slate-600">{{ item.course.name|default:'Tài liệu chung' }}</p>
+                </div>
+
+                {% if item.task %}
+                    <p class="text-sm text-slate-600">Công việc: {{ item.task.title }}</p>
+                {% endif %}
+
+                {% if item.description %}
+                    <p class="text-sm text-slate-600 whitespace-pre-line">{{ item.description }}</p>
+                {% endif %}
+
+                <div class="flex flex-wrap gap-3 items-center">
+                    {% if item.file %}
+                        <a class="sf-button" href="{% url 'resources:download' item.pk %}">Tải tài liệu</a>
+                    {% else %}
+                        <a class="sf-button" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Mở tài liệu</a>
+                    {% endif %}
+                    <a class="sf-secondary" href="{% url 'resources:edit' item.pk %}">Sửa</a>
+                    <a class="text-red-700 text-sm" href="{% url 'resources:delete' item.pk %}">Xóa</a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="sf-card">
+                Chưa có tài liệu phù hợp. Thêm file hoặc link để bắt đầu ôn tập.
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

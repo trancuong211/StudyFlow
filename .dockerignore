@@ -31,3 +31,5 @@ Thumbs.db
 
 # Archives
 *.zip
+node_modules
+test-results

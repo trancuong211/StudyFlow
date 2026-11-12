@@ -1,7 +1,27 @@
 /* Custom StudyFlow Styles */
+.sf-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; }
+.sf-label { display: block; font-weight: 500; margin-bottom: 6px; }
+input:not([type=checkbox]):not([type=radio]), select, textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: white; color: #0f172a; font-size: 16px; }
+input[type=checkbox] { width: 20px; height: 20px; margin: 8px; }
+.sf-button, .sf-secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: center; }
+.sf-button { background: #2563eb; color: white; border: 1px solid #2563eb; }
+.sf-button:hover { background: #1d4ed8; }
+.sf-secondary { background: white; border: 1px solid #cbd5e1; color: #334155; }
+.sf-secondary:hover { background: #f8fafc; }
+.sf-danger { background: #b91c1c; border-color: #b91c1c; }
+.sf-error { color: #991b1b; background: #fef2f2; border-radius: 8px; padding: 10px; font-size: 14px; }
+button:disabled { opacity: .6; cursor: wait; }
+:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+.skip-link { position: absolute; left: 12px; top: -100px; z-index: 100; padding: 12px; background: white; }
+.skip-link:focus { top: 12px; }
+@media (max-width: 639px) { .sf-card { padding: 18px; } .fc .fc-toolbar { flex-wrap: wrap; gap: 10px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
 body {
     -webkit-font-smoothing: antialiased;
 }
+
+/* Long titles, notes and URLs must not widen the full-width content area. */
+#mainContent { overflow-wrap: anywhere; }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
