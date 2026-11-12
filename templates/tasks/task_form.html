@@ -20,6 +20,22 @@
             {% csrf_token %}
             {% if form.errors %}<div class="sf-error" role="alert"><p>Vui lòng kiểm tra các thông tin sau:</p>{{ form.non_field_errors }}{% for field in form %}{% for error in field.errors %}<p>{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
 
+            {% if form.errors %}
+            <div class="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+                <p class="font-medium mb-1">Chưa lưu được, vui lòng kiểm tra:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
             <div>
                 <label for="id_course_name" class="block text-sm font-medium text-slate-700 mb-1.5">Môn học</label>
                 {{ form.course_name }}
@@ -59,6 +75,12 @@
             </div>
 
             <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Độ khó</label>
+                {{ form.difficulty }}
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Chi tiết công việc</label>
                 <label for="id_difficulty" class="block text-sm font-medium text-slate-700 mb-1.5">Độ khó</label>
                 {{ form.difficulty }}
             </div>

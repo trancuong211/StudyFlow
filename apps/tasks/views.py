@@ -1,3 +1,5 @@
+import logging
+import unicodedata
 from django import forms
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -7,9 +9,19 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-import unicodedata
 from .models import Task
 from apps.courses.models import Course
+from apps.scheduler.engine.optimizer import ScheduleOptimizer
+
+logger = logging.getLogger(__name__)
+
+
+def _auto_schedule(user):
+    """Chạy lại thuật toán xếp lịch để task vừa lưu hiển thị ngay trên calendar."""
+    try:
+        ScheduleOptimizer(user=user).run()
+    except Exception:
+        logger.exception('Không thể tự động xếp lịch cho người dùng %s', user.pk)
 from apps.scheduler.progress import refresh_scheduled, planned_minutes, remaining_minutes
 
 class TaskForm(forms.ModelForm):
@@ -125,6 +137,7 @@ def task_create(request):
             task.user = request.user
             task.course = form.resolve_course()
             task.save()
+            _auto_schedule(request.user)
             refresh_scheduled(task)
             messages.success(request, f'Đã thêm công việc "{task.title}" thành công!')
             return redirect('tasks:list')
@@ -144,6 +157,7 @@ def task_update(request, pk):
             task = form.save(commit=False)
             task.course = form.resolve_course()
             task.save()
+            _auto_schedule(request.user)
             task.schedule_blocks.filter(is_auto_generated=True, is_locked=False, end_time__gt=task.deadline).delete()
             refresh_scheduled(task)
             messages.success(request, f'Cập nhật "{task.title}" thành công!')
@@ -178,6 +192,7 @@ def task_toggle_status(request, pk):
         task.save()
     else:
         task.mark_completed()
+    _auto_schedule(request.user)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'status': 'success', 'new_status': task.status})
     return redirect('tasks:list')
