@@ -14,6 +14,7 @@ class TaskInputSchema(BaseModel):
     planned_minutes: int = Field(default=0, ge=0)
     available_minutes: int | None = Field(default=None, ge=0)
     cumulative_unscheduled_minutes: int = Field(default=0, ge=0)
+    overloaded: bool = False
 
     @field_validator('deadline')
     @classmethod
@@ -37,12 +38,22 @@ class RiskAnalysisRequest(BaseModel):
         return value
 
 
+class TaskRiskResponse(BaseModel):
+    task_id: int
+    title: str
+    score: int = Field(ge=0, le=100)
+    risk_level: Literal['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+    missing_minutes: int = Field(ge=0)
+    reasons: list[str]
+
+
 class RiskAnalysisResponse(BaseModel):
     title: str
     summary: str
     risk_level: Literal['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
     advice: str
     source: str = 'rules'
+    task_risks: list[TaskRiskResponse] = Field(default_factory=list)
 
 
 class DailySummaryRequest(BaseModel):

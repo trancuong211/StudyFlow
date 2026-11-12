@@ -17,6 +17,7 @@ Bản tổng hợp lỗi đã sửa, bằng chứng kiểm thử và phần cầ
 - Tài liệu: link hoặc file tối đa 10 MB, gắn môn/task, download riêng tư.
 - Nhắc việc: trong app và email tùy chọn, Celery/Beat.
 - AI: mức rủi ro deadline, thói quen 30 ngày, tóm tắt ngày; OpenAI tùy chọn và fallback theo quy tắc.
+- Task 5: điểm rủi ro 0–100 cho từng công việc, cảnh báo đỏ trước hạn, đề xuất giờ bổ sung/dời lịch và nút áp dụng có kiểm tra dữ liệu mới nhất. Xem [TASK_5_HOAN_THIEN.md](TASK_5_HOAN_THIEN.md) và [lưu đồ](static/diagrams/task5-risk-flow.svg).
 - Google Calendar: OAuth, nhập sự kiện bận primary calendar, xuất/cập nhật khung học, refresh token.
 
 ## Công nghệ và cấu trúc

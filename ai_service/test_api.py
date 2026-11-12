@@ -69,6 +69,9 @@ class AIAPITests(unittest.TestCase):
         self.assertEqual(result["risk_level"], "HIGH")
         self.assertEqual(result["source"], "openai")
         self.assertEqual(result["summary"], "Nhận xét AI")
+        self.assertEqual(result['task_risks'][0]['task_id'], 1)
+        self.assertGreaterEqual(result['task_risks'][0]['score'], 70)
+        self.assertLessEqual(result['task_risks'][0]['score'], 100)
 
     def test_summary_without_llm(self):
         payload = {

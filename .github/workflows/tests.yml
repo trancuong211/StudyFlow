@@ -2,7 +2,12 @@ name: StudyFlow checks
 on: [push, pull_request]
 jobs:
   test:
+    name: test (${{ matrix.database }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [sqlite, postgres]
     services:
       postgres:
         image: postgres:16
@@ -14,7 +19,7 @@ jobs:
         options: --health-cmd "pg_isready -U studyflow" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DEBUG: "True"
-      USE_SQLITE: "False"
+      USE_SQLITE: ${{ matrix.database == 'sqlite' && 'True' || 'False' }}
       DATABASE_URL: postgres://studyflow:test-only-password@localhost:5432/studyflow
       OPENAI_API_KEY: ""
     steps:

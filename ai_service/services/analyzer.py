@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 from ..api.schemas import RiskAnalysisResponse, DailySummaryResponse
+from .risk import score_task
 
 logger = logging.getLogger(__name__)
 
@@ -41,17 +42,21 @@ class AIAnalyzer:
         overdue, deficit, urgent, unplanned = [], [], [], []
         for task in tasks:
             remaining = task.remaining_minutes if task.remaining_minutes is not None else task.estimated_duration
+            if remaining <= 0:
+                continue
             missing = max(0, remaining - task.planned_minutes)
             if remaining > 0 and task.deadline <= now:
                 overdue.append(task.title)
-            if task.available_minutes is not None and task.cumulative_unscheduled_minutes > task.available_minutes:
+            if missing and task.available_minutes is not None and task.cumulative_unscheduled_minutes > task.available_minutes:
                 deficit.append(task.title)
             if missing and task.deadline <= now+timedelta(days=2):
                 urgent.append(task.title)
             if missing:
                 unplanned.append(task.title)
         overloaded = (habits or {}).get('overloaded_days', [])
-        risk = 'CRITICAL' if overdue else 'HIGH' if deficit or urgent or overloaded else 'MEDIUM' if unplanned else 'LOW'
+        task_risks = [score_task(task, now) for task in tasks]
+        score = max((item.score for item in task_risks), default=0)
+        risk = 'CRITICAL' if score == 100 else 'HIGH' if score >= 70 or overloaded else 'MEDIUM' if score >= 30 else 'LOW'
         summary = (f'{len(overdue)} việc quá hạn; {len(urgent)} việc trong 48 giờ chưa đủ lịch; '
                    f'{len(deficit)} mốc deadline thiếu sức chứa; {len(unplanned)} việc cần bổ sung khung học.')
         if overloaded:
@@ -68,7 +73,8 @@ class AIAnalyzer:
                 'tasks': [t.model_dump(mode='json') for t in tasks[:50]], 'habits': habits or {}})
             if narrative:
                 summary, advice, source = narrative.summary, narrative.advice, 'openai'
-        return RiskAnalysisResponse(title=title, summary=summary, risk_level=risk, advice=advice, source=source)
+        return RiskAnalysisResponse(title=title, summary=summary, risk_level=risk, advice=advice,
+                                    source=source, task_risks=task_risks)
 
     @classmethod
     def daily_summary(cls, tasks, blocks_count, scheduled_minutes=0, daily_goal_minutes=240, habits=None, use_llm=True):
