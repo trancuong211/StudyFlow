@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 from .availability import recurring_intervals
 from .models import BusyPeriod, ScheduleBlock
@@ -68,8 +69,14 @@ class BlockForm(forms.ModelForm):
 
         super().__init__(*args, **kwargs)
         self.instance.user = user
-        self.fields["task"].queryset = Task.objects.filter(user=user).exclude(
-            status="COMPLETED"
-        )
+        queryset = Task.objects.filter(user=user)
+        if self.instance.pk and self.instance.task_id:
+            queryset = queryset.filter(
+                Q(status__in=[Task.Status.TODO, Task.Status.IN_PROGRESS])
+                | Q(pk=self.instance.task_id)
+            )
+        else:
+            queryset = queryset.exclude(status=Task.Status.COMPLETED)
+        self.fields["task"].queryset = queryset
         if not self.instance.pk:
             self.fields["is_locked"].initial = True

@@ -7,7 +7,12 @@ from apps.accounts.timezones import user_zone
 from apps.tasks.models import Task
 from apps.scheduler.models import ScheduleBlock
 from apps.scheduler.availability import busy_intervals
-from apps.scheduler.progress import remaining_minutes, planned_minutes, refresh_scheduled
+from apps.scheduler.progress import (
+    focus_minutes_map,
+    planned_minutes_map,
+    refresh_scheduled,
+    remaining_minutes,
+)
 
 
 class ScheduleOptimizer:
@@ -22,15 +27,19 @@ class ScheduleOptimizer:
         self.window_end = datetime.combine(self.start_date + timedelta(days=self.days_ahead), time.min, self.zone)
         self.report = []
 
-    def get_existing_busy_intervals(self):
+    def get_existing_busy_intervals(self, busy=None):
         blocks = ScheduleBlock.objects.filter(user=self.user, start_time__lt=self.window_end,
                                                end_time__gt=self.window_start)
         intervals = [(b.start_time - timedelta(minutes=15), b.end_time + timedelta(minutes=15)) for b in blocks]
-        return intervals + busy_intervals(self.user, self.window_start, self.window_end)
+        if busy is None:
+            busy = busy_intervals(self.user, self.window_start, self.window_end)
+        return intervals + busy
 
     def find_free_slots(self, intervals):
         slots = []
         earliest = timezone.now() + timedelta(minutes=15)
+        earliest = earliest.replace(second=0, microsecond=0)
+        earliest += timedelta(minutes=(-earliest.minute) % 15)
         for offset in range(self.days_ahead):
             day = self.start_date + timedelta(days=offset)
             start = max(datetime.combine(day, time(self.study_start_hour), self.zone), earliest)
@@ -68,13 +77,18 @@ class ScheduleOptimizer:
                                       start_time__gte=max(now, self.window_start), start_time__lt=self.window_end).delete()
         tasks = list(Task.objects.filter(user=self.user, status__in=['TODO', 'IN_PROGRESS'])
                      .order_by('deadline', '-priority', '-difficulty'))
-        slots = self.find_free_slots(self.get_existing_busy_intervals())
+        horizon = max([self.window_end, now] + [t.deadline for t in tasks])
+        busy = busy_intervals(self.user, self.window_start, horizon)
+        planned = planned_minutes_map(self.user, tasks, now, busy=busy)
+        focus = focus_minutes_map(self.user, tasks)
+        slots = self.find_free_slots(self.get_existing_busy_intervals(busy))
         load = self._daily_load()
         cap = self.user.daily_study_goal_hours * 60
         created = []
         self.report = []
         for task in tasks:
-            needed = max(0, remaining_minutes(task) - planned_minutes(task, now))
+            task_focus = focus.get(task.pk, 0)
+            needed = max(0, remaining_minutes(task, task_focus) - planned.get(task.pk, 0))
             for i, (start, end) in enumerate(slots):
                 if needed <= 0:
                     break
@@ -94,9 +108,16 @@ class ScheduleOptimizer:
                     load[day] += allocation
                     start = finish + timedelta(minutes=15)
                     slots[i] = (start, end)
-            refresh_scheduled(task)
+            refresh_scheduled(task, now=now, busy=busy, focus=task_focus)
             if needed:
-                self.report.append({'task_id': task.pk, 'title': task.title, 'missing_minutes': needed,
-                    'reason': 'Đã quá deadline' if task.deadline <= now else
-                              'Không đủ thời gian trước deadline trong khung giờ học và giới hạn mỗi ngày'})
+                if task.deadline <= now:
+                    reason = 'Đã quá deadline'
+                elif task.deadline > self.window_end:
+                    reason = ('Deadline nằm ngoài cửa sổ lập lịch 7 ngày tới; '
+                              'công việc sẽ được xếp tiếp trong các lần chạy sau')
+                else:
+                    reason = ('Không đủ thời gian trước deadline trong khung giờ học '
+                              'và giới hạn mỗi ngày')
+                self.report.append({'task_id': task.pk, 'title': task.title,
+                                    'missing_minutes': needed, 'reason': reason})
         return created

@@ -25,10 +25,10 @@ class EncryptedTextField(models.TextField):
                 return (
                     self.cipher().decrypt(value[len(self.prefix) :].encode()).decode()
                 )
-            except InvalidToken:
+            except InvalidToken as err:
                 raise ValidationError(
                     "Không thể đọc thông tin Google. Hãy kết nối lại tài khoản."
-                )
+                ) from err
         return value
 
     def get_prep_value(self, value):

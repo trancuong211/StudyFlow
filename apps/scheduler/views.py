@@ -14,7 +14,12 @@ from apps.calendar_sync.models import GoogleCalendarEvent
 from .models import ScheduleBlock, BusyPeriod
 from .forms import BusyPeriodForm, BlockForm
 from .availability import recurring_intervals, busy_intervals
-from .progress import remaining_minutes, planned_minutes, refresh_scheduled
+from .progress import (
+    focus_minutes_map,
+    planned_minutes_map,
+    refresh_scheduled,
+    remaining_minutes,
+)
 from .engine.optimizer import ScheduleOptimizer
 
 
@@ -30,11 +35,26 @@ def calendar_view(request):
     cap = request.user.daily_study_goal_hours * 60
     overloaded_days = [{'date': day, 'minutes': minutes, 'extra': minutes-cap}
                        for day, minutes in sorted(load.items()) if minutes > cap]
-    for task in Task.objects.filter(user=request.user).exclude(status='COMPLETED'):
-        missing = max(0, remaining_minutes(task)-planned_minutes(task))
+    now = timezone.now()
+    window_end = now + timedelta(days=7)
+    tasks = list(Task.objects.filter(user=request.user).exclude(status='COMPLETED'))
+    planned = planned_minutes_map(request.user, tasks, now)
+    focus = focus_minutes_map(request.user, tasks)
+    for task in tasks:
+        missing = max(
+            0,
+            remaining_minutes(task, focus.get(task.pk, 0)) - planned.get(task.pk, 0),
+        )
         if missing:
-            report.append({'task_id': task.pk, 'title': task.title, 'missing_minutes': missing,
-                'reason': 'Đã quá deadline' if task.is_overdue else 'Chưa có đủ khung học trước deadline'})
+            if task.is_overdue:
+                reason = 'Đã quá deadline'
+            elif task.deadline > window_end:
+                reason = ('Deadline nằm ngoài cửa sổ lập lịch 7 ngày tới; '
+                          'công việc sẽ được xếp tiếp trong các lần chạy sau')
+            else:
+                reason = 'Chưa có đủ khung học trước deadline'
+            report.append({'task_id': task.pk, 'title': task.title,
+                           'missing_minutes': missing, 'reason': reason})
     return render(request, 'scheduler/calendar.html', {'schedule_report': report, 'overloaded_days': overloaded_days})
 
 

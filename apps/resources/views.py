@@ -62,8 +62,8 @@ def resource_download(request, pk):
             as_attachment=True,
             filename=item.title + Path(item.file.name).suffix,
         )
-    except FileNotFoundError:
-        raise Http404("Tệp không còn tồn tại.")
+    except FileNotFoundError as err:
+        raise Http404("Tệp không còn tồn tại.") from err
 
 
 @login_required
