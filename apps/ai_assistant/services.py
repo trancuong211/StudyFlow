@@ -10,7 +10,11 @@ from apps.accounts.timezones import user_zone
 from apps.tasks.models import Task
 from apps.scheduler.models import ScheduleBlock
 from apps.scheduler.engine.optimizer import ScheduleOptimizer
-from apps.scheduler.progress import remaining_minutes, planned_minutes
+from apps.scheduler.progress import (
+    focus_minutes_map,
+    planned_minutes_map,
+    remaining_minutes,
+)
 from apps.pomodoro.models import PomodoroSession
 from ai_service.api.schemas import RiskAnalysisRequest, RiskAnalysisResponse, DailySummaryRequest, DailySummaryResponse
 from ai_service.services.analyzer import AIAnalyzer
@@ -51,8 +55,16 @@ def planning_context(user):
     cap = user.daily_study_goal_hours*60
     cumulative = 0
     tasks = []
-    for task in Task.objects.filter(user=user).exclude(status='COMPLETED').order_by('deadline', '-priority')[:1000]:
-        remaining, planned = remaining_minutes(task), planned_minutes(task, now)
+    task_list = list(
+        Task.objects.filter(user=user)
+        .exclude(status='COMPLETED')
+        .order_by('deadline', '-priority')[:1000]
+    )
+    planned_by_task = planned_minutes_map(user, task_list, now)
+    focus_by_task = focus_minutes_map(user, task_list)
+    for task in task_list:
+        remaining = remaining_minutes(task, focus_by_task.get(task.pk, 0))
+        planned = planned_by_task.get(task.pk, 0)
         cumulative += max(0, remaining-planned)
         per_day = defaultdict(int)
         for a, b in slots:

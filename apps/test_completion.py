@@ -11,7 +11,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
 
 from ai_service.api.schemas import TaskInputSchema
 from ai_service.services.analyzer import AIAnalyzer
@@ -35,7 +34,7 @@ from apps.resources.models import StudyResource
 from apps.scheduler.availability import recurring_intervals
 from apps.scheduler.engine.optimizer import ScheduleOptimizer
 from apps.scheduler.models import BusyPeriod, ScheduleBlock
-from apps.scheduler.progress import refresh_scheduled, remaining_minutes
+from apps.scheduler.progress import remaining_minutes
 from apps.tasks.models import Task
 
 NOW = datetime(2026, 1, 2, 0, tzinfo=utc.utc)  # 07:00 Vietnam
@@ -125,7 +124,7 @@ class CompletionTests(TestCase):
         self.assertFalse(task.is_scheduled)
 
     def test_crossing_boundary_busy_and_google_ignored_transparent(self):
-        task = self.task(estimated_duration=60)
+        self.task(estimated_duration=60)
         BusyPeriod.objects.create(
             user=self.user,
             title="Ca làm",
@@ -206,7 +205,7 @@ class CompletionTests(TestCase):
         self.assertEqual(insight.risk_level, "HIGH")
 
     def test_same_deadline_prefers_high_priority(self):
-        low = self.task(estimated_duration=60, priority=1)
+        self.task(estimated_duration=60, priority=1)
         high = self.task(estimated_duration=60, priority=3)
         self.user.daily_study_goal_hours = 1
         self.user.save()

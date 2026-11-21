@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from .api.endpoints import router as ai_router
 
 app = FastAPI(

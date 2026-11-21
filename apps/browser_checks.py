@@ -20,7 +20,7 @@ from apps.calendar_sync.models import GoogleCalendarEvent
 from apps.notifications.models import Notification
 from apps.pomodoro.models import PomodoroSession
 from apps.resources.models import StudyResource
-from apps.scheduler.models import BusyPeriod, ScheduleBlock
+from apps.scheduler.models import ScheduleBlock
 from apps.tasks.models import Task
 
 

@@ -15,8 +15,10 @@ class StudyPreferencesMixin:
         value = self.cleaned_data['timezone']
         try:
             ZoneInfo(value)
-        except (ZoneInfoNotFoundError, ValueError):
-            raise forms.ValidationError('Múi giờ không hợp lệ. Ví dụ: Asia/Ho_Chi_Minh.')
+        except (ZoneInfoNotFoundError, ValueError) as err:
+            raise forms.ValidationError(
+                'Múi giờ không hợp lệ. Ví dụ: Asia/Ho_Chi_Minh.'
+            ) from err
         return value
 
     def clean_daily_study_goal_hours(self):

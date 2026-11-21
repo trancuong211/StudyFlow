@@ -7,7 +7,6 @@ from google_auth_oauthlib.flow import Flow
 from .models import GoogleCalendarToken
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
-from django.utils import timezone
 from datetime import timezone as dt_timezone
 from .services import sync_calendar
 from .models import GoogleCalendarEvent, CalendarExport
@@ -157,7 +156,20 @@ def sync_now(request):
     else:
         try:
             result = sync_calendar(request.user)
-            messages.success(request, f"Đã nhập {result['imported']} sự kiện bận và xuất {result['exported']} khung học. Hãy kiểm tra xung đột và lập lại lịch nếu cần.")
+            message = (
+                f"Đã nhập {result['imported']} sự kiện bận và xuất "
+                f"{result['exported']} khung học."
+            )
+            if result.get('conflicts'):
+                message += (
+                    f" Có {result['conflicts']} khung học bị trùng lịch Google mới;"
+                    " hãy kiểm tra thông báo."
+                )
+            if result.get('errors'):
+                message += (
+                    f" {result['errors']} khung học chưa xuất được, sẽ thử lại sau."
+                )
+            messages.success(request, message)
         except Exception:
             messages.error(request, 'Không thể đồng bộ Google. Kiểm tra kết nối, quyền Calendar hoặc kết nối lại tài khoản.')
     return redirect('calendar_sync:settings')

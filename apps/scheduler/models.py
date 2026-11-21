@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.db.models import F, Q
 from django.conf import settings
+from django.utils import timezone
 from apps.tasks.models import Task
 
 class ScheduleBlock(models.Model):
@@ -60,8 +61,22 @@ class ScheduleBlock(models.Model):
         if self.task_id:
             if self.task.user_id != self.user_id:
                 raise ValidationError('Công việc không thuộc tài khoản của bạn.')
+            original = None
+            if self.pk:
+                original = (
+                    ScheduleBlock.objects.filter(pk=self.pk)
+                    .only('task_id', 'start_time')
+                    .first()
+                )
             if self.task.status == Task.Status.COMPLETED:
-                raise ValidationError('Công việc này đã hoàn thành.')
+                task_changed = original is None or original.task_id != self.task_id
+                moved_to_future = (
+                    original is not None
+                    and self.start_time != original.start_time
+                    and self.start_time > timezone.now()
+                )
+                if task_changed or moved_to_future:
+                    raise ValidationError('Công việc này đã hoàn thành.')
             if self.end_time > self.task.deadline:
                 raise ValidationError('Khung học kết thúc sau deadline của công việc.')
         if ScheduleBlock.objects.filter(user_id=self.user_id, start_time__lt=self.end_time,

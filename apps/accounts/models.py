@@ -29,7 +29,7 @@ class User(AbstractUser):
         super().clean()
         try:
             ZoneInfo(self.timezone)
-        except (ZoneInfoNotFoundError, ValueError):
-            raise ValidationError({'timezone': 'Múi giờ không hợp lệ.'})
+        except (ZoneInfoNotFoundError, ValueError) as err:
+            raise ValidationError({'timezone': 'Múi giờ không hợp lệ.'}) from err
         if self.study_start_hour is not None and self.study_end_hour is not None and self.study_start_hour >= self.study_end_hour:
             raise ValidationError('Giờ kết thúc học phải sau giờ bắt đầu.')
