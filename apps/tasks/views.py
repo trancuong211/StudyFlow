@@ -1,29 +1,14 @@
-import logging
-import unicodedata
 from django import forms
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth import get_user_model
-from django.db import transaction
-from django.db.models import Q
 from django.http import JsonResponse
-from django.utils import timezone
 from django.views.decorators.http import require_POST
 import logging
 import unicodedata
 from .models import Task
 from apps.courses.models import Course
 from apps.scheduler.engine.optimizer import ScheduleOptimizer
-from .models import Task
-from apps.courses.models import Course
-from apps.scheduler.engine.optimizer import ScheduleOptimizer
-from apps.scheduler.progress import (
-    focus_minutes_map,
-    planned_minutes_map,
-    refresh_scheduled,
-    remaining_minutes,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -44,17 +29,6 @@ class TaskForm(forms.ModelForm):
             attrs={'type': 'datetime-local'},
             format='%Y-%m-%dT%H:%M',
         ),
-    """Chạy lại thuật toán xếp lịch để task vừa lưu hiển thị ngay trên calendar."""
-    try:
-        ScheduleOptimizer(user=user).run()
-        return True
-    except Exception:
-        logger.exception('Không thể tự động xếp lịch cho người dùng %s', user.pk)
-        return False
-
-class TaskForm(forms.ModelForm):
-    deadline = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         label='Hạn chót (Deadline)'
     )
     difficulty = forms.TypedChoiceField(
@@ -110,18 +84,6 @@ class TaskForm(forms.ModelForm):
             course = Course.objects.create(user=self.user, name=name)
         return course
 
-    def clean(self):
-        data = super().clean()
-        deadline = data.get('deadline')
-        if self.instance.pk and deadline and data.get('status') != Task.Status.COMPLETED:
-            preserved = self.instance.schedule_blocks.filter(
-                Q(is_locked=True) | Q(is_auto_generated=False),
-                end_time__gt=deadline,
-            )
-            if preserved.exists():
-                raise forms.ValidationError('Có khung học thủ công hoặc đã khóa sau deadline mới. Hãy chỉnh khung học trước.')
-        return data
-
 @login_required
 def task_list(request):
     """Danh sách task, lọc theo trạng thái & ưu tiên. Route: /tasks/"""
@@ -129,50 +91,26 @@ def task_list(request):
     priority_filter = request.GET.get('priority')
     course_filter = request.GET.get('course')
 
-    tasks = Task.objects.filter(user=request.user).select_related('course')
+    tasks = Task.objects.filter(user=request.user)
 
     # Chỉ áp dụng bộ lọc khi tham số hợp lệ, giá trị sai thì bỏ qua (không lỗi 500)
     if status_filter in Task.Status.values:
         tasks = tasks.filter(status=status_filter)
-    else:
-        status_filter = None
-    if priority_filter in {str(value) for value in Task.Priority.values}:
+    if priority_filter and priority_filter.isdigit() and int(priority_filter) in Task.Priority.values:
         tasks = tasks.filter(priority=int(priority_filter))
-    else:
-        priority_filter = None
-    if (course_filter and len(course_filter) <= 19 and course_filter.isascii()
-            and course_filter.isdigit() and 0 < int(course_filter) <= 2**63 - 1):
+    if course_filter and course_filter.isdigit():
         tasks = tasks.filter(course_id=int(course_filter))
-        course_filter = str(int(course_filter))
-    else:
-        course_filter = None
 
-    query = request.GET.get('q', '').strip()[:200]
-    if query:
-        tasks = tasks.filter(title__icontains=query)
-    tasks = list(tasks)
-    now = timezone.now()
-    planned = planned_minutes_map(request.user, tasks, now)
-    focus = focus_minutes_map(request.user, tasks)
-    for task in tasks:
-        task.is_scheduled = (
-            task.status != Task.Status.COMPLETED
-            and planned.get(task.pk, 0) >= remaining_minutes(task, focus.get(task.pk, 0))
-        )
     return render(request, 'tasks/task_list.html', {
         'tasks': tasks,
         'status_filter': status_filter,
         'priority_filter': priority_filter,
         'course_filter': course_filter,
-        'query': query,
-        'courses': Course.objects.filter(user=request.user),
     })
 
 @login_required
-@transaction.atomic
 def task_create(request):
     if request.method == 'POST':
-        get_user_model().objects.select_for_update().get(pk=request.user.pk)
         form = TaskForm(request.POST, user=request.user)
         if form.is_valid():
             task = form.save(commit=False)
@@ -184,21 +122,13 @@ def task_create(request):
                 messages.success(request, f'Đã thêm công việc "{task.title}" và xếp {count} khung giờ học vào lịch!')
             else:
                 messages.warning(request, f'Đã lưu công việc "{task.title}" nhưng chưa thể tự động xếp lịch. Hãy bấm "Tự động sắp lịch" trên trang Lịch.')
-            scheduled = _auto_schedule(request.user)
-            refresh_scheduled(task)
-            messages.success(request, f'Đã thêm công việc "{task.title}" thành công!')
-            if not scheduled:
-                messages.warning(request, 'Chưa thể tự động xếp lịch. Hãy thử "Tự động sắp lịch tuần" sau.')
             return redirect('tasks:list')
     else:
         form = TaskForm(user=request.user)
     return render(request, 'tasks/task_form.html', {'form': form, 'title': 'Thêm công việc / Deadline'})
 
 @login_required
-@transaction.atomic
 def task_update(request, pk):
-    if request.method == 'POST':
-        get_user_model().objects.select_for_update().get(pk=request.user.pk)
     task = get_object_or_404(Task, pk=pk, user=request.user)
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task, user=request.user)
@@ -211,22 +141,13 @@ def task_update(request, pk):
                 messages.success(request, f'Cập nhật "{task.title}" thành công và đã xếp lại {count} khung giờ học!')
             else:
                 messages.warning(request, f'Đã cập nhật "{task.title}" nhưng chưa thể tự động xếp lại lịch. Hãy bấm "Tự động sắp lịch" trên trang Lịch.')
-            scheduled = _auto_schedule(request.user)
-            task.schedule_blocks.filter(is_auto_generated=True, is_locked=False, end_time__gt=task.deadline).delete()
-            refresh_scheduled(task)
-            messages.success(request, f'Cập nhật "{task.title}" thành công!')
-            if not scheduled:
-                messages.warning(request, 'Chưa thể tự động xếp lịch. Hãy thử "Tự động sắp lịch tuần" sau.')
             return redirect('tasks:list')
     else:
         form = TaskForm(instance=task, user=request.user)
     return render(request, 'tasks/task_form.html', {'form': form, 'title': 'Chỉnh sửa công việc', 'task': task})
 
 @login_required
-@transaction.atomic
 def task_delete(request, pk):
-    if request.method == 'POST':
-        get_user_model().objects.select_for_update().get(pk=request.user.pk)
     task = get_object_or_404(Task, pk=pk, user=request.user)
     if request.method == 'POST':
         title = task.title
@@ -237,10 +158,8 @@ def task_delete(request, pk):
 
 @login_required
 @require_POST
-@transaction.atomic
 def task_toggle_status(request, pk):
     """Đánh dấu hoàn thành / chưa hoàn thành công việc."""
-    get_user_model().objects.select_for_update().get(pk=request.user.pk)
     task = get_object_or_404(Task, pk=pk, user=request.user)
     if task.status == Task.Status.COMPLETED:
         task.status = Task.Status.TODO
@@ -248,9 +167,6 @@ def task_toggle_status(request, pk):
         task.save()
     else:
         task.mark_completed()
-    scheduled = _auto_schedule(request.user)
-    if not scheduled:
-        messages.warning(request, 'Chưa thể tự động xếp lịch. Hãy thử "Tự động sắp lịch tuần" sau.')
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'status': 'success', 'new_status': task.status})
     return redirect('tasks:list')
