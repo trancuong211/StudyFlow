@@ -43,28 +43,12 @@ def remove_columns(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0001_initial'),
+        ('accounts', '0003_alter_user_daily_study_goal_hours_and_more'),
     ]
 
     operations = [
         migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.AddField(
-                    model_name='user',
-                    name='email_reminders',
-                    field=models.BooleanField(default=True, verbose_name='Nhận nhắc việc qua email'),
-                ),
-                migrations.AddField(
-                    model_name='user',
-                    name='study_start_hour',
-                    field=models.PositiveSmallIntegerField(default=8, verbose_name='Giờ bắt đầu học'),
-                ),
-                migrations.AddField(
-                    model_name='user',
-                    name='study_end_hour',
-                    field=models.PositiveSmallIntegerField(default=22, verbose_name='Giờ kết thúc học'),
-                ),
-            ],
+            state_operations=[],
             database_operations=[
                 migrations.RunPython(add_missing_columns, remove_columns),
             ],
