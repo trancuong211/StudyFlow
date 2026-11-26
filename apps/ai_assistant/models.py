@@ -41,6 +41,7 @@ class AIInsight(models.Model):
         default='LOW',
         choices=[(x, x) for x in ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')]
     )
+    risk_level = models.CharField('Mức rủi ro', max_length=10, default='LOW', choices=[(x, x) for x in ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')])
     source = models.CharField('Nguồn phân tích', max_length=30, default='rules')
     context_fingerprint = models.CharField(max_length=64, blank=True, db_index=True)
     details = models.JSONField(default=dict, blank=True)

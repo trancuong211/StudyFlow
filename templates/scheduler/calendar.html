@@ -1,146 +1,72 @@
-{% extends 'base.html' %}
-
-{% block title %}Lịch Học & Tối Ưu Tự Động – StudyFlow{% endblock %}
-
-{% block extra_css %}
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-<style>
-    /* FullCalendar overrides */
-    .fc { font-family: 'Inter', sans-serif; }
-    .fc .fc-toolbar-title { font-size: 1.125rem; font-weight: 700; color: #0f172a; }
-    .fc-theme-standard th { background-color: #f8fafc; font-weight: 600; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 4px; border-color: #e2e8f0; }
-    .fc-theme-standard td, .fc-theme-standard th { border-color: #e2e8f0; }
-    .fc .fc-button-primary {
-        background-color: #fff; border-color: #e2e8f0; color: #334155;
-        border-radius: 0.625rem; font-weight: 500; font-size: 0.8125rem;
-        padding: 0.375rem 0.75rem; box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
-        transition: all 0.15s;
-    }
-    .fc .fc-button-primary:hover { background-color: #f8fafc; border-color: #cbd5e1; }
-    .fc .fc-button-primary:not(:disabled).fc-button-active { background-color: #2563eb; border-color: #2563eb; color: #fff; }
-    .fc .fc-button-primary:disabled { opacity: 0.5; }
-    .fc .fc-today-button { background-color: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
-    .fc .fc-daygrid-day-number, .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number { color: #334155; text-decoration: none; font-weight: 500; }
-    .fc-event { cursor: pointer; border-radius: 6px; font-size: 0.75rem; font-weight: 500; border: none !important; padding: 2px 6px; }
-    .fc-event:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
-    .fc-timegrid-slot { height: 2.25rem; }
-    .fc-timegrid-axis-cushion { font-size: 0.75rem; color: #94a3b8; }
-    .fc-scrollgrid { border-radius: 0.75rem; overflow: hidden; border: 1px solid #e2e8f0; }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="space-y-5">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-            <p class="text-sm font-medium text-brand-600 mb-1">Lên lịch thông minh</p>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Lịch học cá nhân</h1>
-            <p class="text-sm text-slate-500 mt-1">Kéo thả block để điều chỉnh. Khóa block để chống ghi đè khi chạy thuật toán.</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2.5">
-            <a href="{% url 'calendar_sync:connect' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm shadow-sm transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                Đồng bộ Google
-            </a>
-            <form method="post" action="{% url 'scheduler:auto_schedule' %}">
-                {% csrf_token %}
-                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm shadow-sm transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    Tự động sắp lịch
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Legend -->
-    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-500">
-        <span class="font-semibold text-slate-700">Chú thích:</span>
-        <span class="inline-flex items-center gap-1.5">
-            <span class="w-3 h-3 rounded bg-brand-500"></span> Khung giờ học
-        </span>
-        <span class="inline-flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
-            Block đã khóa — thuật toán không ghi đè
-        </span>
-        <span class="inline-flex items-center gap-1.5">
-            <span class="text-slate-400">💡</span> Kéo-thả sẽ tự động khóa block đó
-        </span>
-    </div>
-
-    <!-- FullCalendar -->
-    <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div id="calendar"></div>
-    </div>
+{% extends 'base.html' %}{% load static %}
+{% block title %}Lịch học cá nhân – StudyFlow{% endblock %}
+{% block extra_css %}<script src="{% static 'vendor/fullcalendar.min.js' %}"></script>
+<script src="{% static 'vendor/fullcalendar-vi.min.js' %}"></script>
+<script src="{% static 'vendor/luxon.min.js' %}"></script>
+<script src="{% static 'vendor/fullcalendar-luxon.min.js' %}"></script>
+<style>.fc{font-family:Inter,sans-serif}.fc .fc-toolbar-title{font-size:1.15rem;font-weight:700}.fc .fc-button-primary{background:#2563eb;border-color:#2563eb}.fc-event{cursor:pointer;border-radius:5px}.fc .fc-timegrid-slot{height:2.2rem}.fc-event:focus{outline:3px solid #0f172a}.fc-scrollgrid{border-radius:10px;overflow:hidden}</style>{% endblock %}
+{% block content %}<div class="space-y-5">
+<div class="flex flex-wrap items-center justify-between gap-4"><div><h1 class="text-2xl font-bold">Lịch học cá nhân</h1><p class="text-sm text-slate-600 mt-1">Kế hoạch theo {{ user.timezone }} · tối đa {{ user.daily_study_goal_hours }} giờ học/ngày.</p></div>
+<div class="flex flex-wrap gap-2"><a class="sf-secondary" href="{% url 'scheduler:busy_list' %}">Lịch bận</a><a class="sf-secondary" href="{% url 'calendar_sync:settings' %}">Google Calendar</a><a class="sf-secondary" href="{% url 'scheduler:block_create' %}">Thêm khung học</a><form method="post" action="{% url 'scheduler:auto_schedule' %}" data-loading-form>{% csrf_token %}<button class="sf-button" type="submit">Tự động sắp lịch tuần</button></form></div></div>
+<p class="text-sm text-slate-600">Bấm khung học để sửa hoặc khóa. Kéo–thả sẽ tự khóa khung đã chỉnh. Lịch bận màu xám, sự kiện Google màu xanh lá.</p>
+<div id="calendar-status" class="hidden sf-error" role="alert"></div>
+{% if overloaded_days %}<section class="sf-error" role="alert"><h2 class="font-semibold">Kế hoạch được giữ lại đang vượt mục tiêu ngày</h2>{% for day in overloaded_days %}<p>{{ day.date|date:'d/m' }}: {{ day.minutes }} phút, vượt {{ day.extra }} phút. Hãy chỉnh khung thủ công/đã khóa nếu cần giảm tải.</p>{% endfor %}</section>{% endif %}
+<div class="sf-card"><div id="calendar"></div></div>
+{% if schedule_report %}<section class="sf-card space-y-3"><h2 class="text-lg font-semibold">Công việc chưa đủ lịch trước deadline</h2><p class="text-sm text-slate-600">Chạy lập lịch tuần, điều chỉnh lịch bận hoặc giảm phạm vi công việc nếu thời gian không đủ.</p>
+{% for item in schedule_report %}<div class="flex flex-wrap justify-between gap-2 border-t border-slate-100 pt-3"><div><a class="font-medium text-brand-700" href="{% url 'tasks:edit' item.task_id %}">{{ item.title }}</a><p class="text-sm text-slate-600">{{ item.reason }}</p></div><span class="text-sm font-semibold text-amber-800">Thiếu {{ item.missing_minutes }} phút</span></div>{% endfor %}</section>{% endif %}
 </div>
+<dialog id="event-dialog" class="rounded-2xl p-6 backdrop:bg-black/40" style="width:calc(100% - 2rem)"><h2 id="event-title" class="font-bold text-xl"></h2><p id="event-details" class="text-sm text-slate-600 my-4"></p><div class="flex flex-wrap gap-3"><a id="event-edit" class="sf-button">Chỉnh thời gian</a><button id="event-lock" class="sf-secondary">Khóa</button><button id="event-close" class="sf-secondary">Đóng</button></div></dialog>
 {% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const calendarEl = document.getElementById('calendar');
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'timeGridWeek',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'timeGridWeek,timeGridDay,dayGridMonth'
-            },
-            locale: 'vi',
-            slotMinTime: '06:00:00',
-            slotMaxTime: '23:00:00',
-            allDaySlot: false,
-            editable: true,
-            eventResizableFromStart: true,
-            events: '{% url "scheduler:api_events" %}',
-            eventDrop: function(info) {
-                updateEventTime(info.event);
-            },
-            eventResize: function(info) {
-                updateEventTime(info.event);
-            },
-            eventClick: function(info) {
-                const isLocked = info.event.extendedProps.isLocked;
-                const confirmMsg = isLocked
-                    ? 'Bạn có muốn MỞ KHÓA block này để thuật toán có thể sắp xếp lại?'
-                    : 'Bạn có muốn KHÓA block này để thuật toán không di chuyển nó?';
-                if (confirm(confirmMsg)) {
-                    toggleLock(info.event.id);
-                }
-            }
-        });
-        calendar.render();
-
-        function updateEventTime(event) {
-            fetch(`/scheduler/api/block/${event.id}/update/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    start: event.start.toISOString(),
-                    end: event.end ? event.end.toISOString() : null,
-                    lock_on_edit: true
-                })
-            }).then(r => r.json()).then(data => {
-                if (data.status === 'success') {
-                    calendar.refetchEvents();
-                }
-            });
-        }
-
-        function toggleLock(blockId) {
-            fetch(`/scheduler/api/block/${blockId}/toggle-lock/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            }).then(r => r.json()).then(data => {
-                calendar.refetchEvents();
-            });
-        }
+{% block extra_js %}<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const status = document.getElementById('calendar-status');
+    const dialog = document.getElementById('event-dialog');
+    let selected = null;
+    function error(message) { status.textContent = message; status.classList.remove('hidden'); }
+    async function post(url, body) {
+        const response = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'}, body:JSON.stringify(body)});
+        const data = await response.json();
+        if (!response.ok || data.status === 'error') throw new Error(data.message || 'Không thể lưu lịch. Hãy thử lại.');
+        return data;
+    }
+    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: window.innerWidth < 640 ? 'timeGridDay' : 'timeGridWeek',
+        headerToolbar:{left:'prev,next today', center:'title', right:'timeGridWeek,timeGridDay,dayGridMonth'},
+        buttonText:{today:'Hôm nay',week:'Tuần',day:'Ngày',month:'Tháng'},
+        locale:'vi', timeZone:'{{ user.timezone|escapejs }}', firstDay:1, slotMinTime:'00:00:00', slotMaxTime:'24:00:00',
+        scrollTime:'{{ user.study_start_hour|stringformat:"02d" }}:00:00',
+        allDaySlot:true, editable:true, eventResizableFromStart:true, height:Math.max(480, window.innerHeight-280),
+        windowResize:() => calendar.setOption('height', Math.max(480, window.innerHeight-280)),
+        events:'{% url "scheduler:api_events" %}',
+        loading: loading => { if (loading) {status.textContent='Đang tải lịch…';status.classList.remove('hidden');} else if(status.textContent==='Đang tải lịch…') status.classList.add('hidden'); },
+        eventSourceFailure:() => error('Không thể tải lịch. Kiểm tra kết nối và tải lại trang.'),
+        eventDrop:updateTime, eventResize:updateTime,
+        eventDidMount:info => {info.el.setAttribute('tabindex','0');info.el.setAttribute('aria-label',info.event.title);info.el.addEventListener('keydown',e=>{if(e.key==='Enter')openEvent(info.event);});},
+        eventClick:info => openEvent(info.event)
     });
-</script>
-{% endblock %}
+    calendar.render();
+    async function updateTime(info) {
+        try {
+            await post('/scheduler/api/block/'+info.event.id+'/update/', {start:info.event.start.toISOString(),end:info.event.end?.toISOString(),lock_on_edit:true});
+            status.classList.add('hidden');calendar.refetchEvents();
+        } catch(e) {info.revert();error(e.message);}
+    }
+    function openEvent(event) {
+        selected=event;
+        document.getElementById('event-title').textContent=event.title;
+        document.getElementById('event-details').textContent=event.start.toLocaleString('vi-VN',{timeZone:'{{ user.timezone|escapejs }}'})+' · '+(event.extendedProps.notes || '');
+        const edit=document.getElementById('event-edit'), lock=document.getElementById('event-lock');
+        const kind=event.extendedProps.kind;
+        edit.hidden=kind==='google';lock.hidden=kind!=='study';
+        edit.href=kind==='busy'?event.extendedProps.editUrl:'/scheduler/block/'+event.id+'/edit/';
+        lock.textContent=event.extendedProps.isLocked?'Mở khóa':'Khóa khung học';
+        dialog.showModal();
+    }
+    document.getElementById('event-close').onclick=()=>dialog.close();
+    document.getElementById('event-lock').onclick=async function() {
+        this.disabled=true;
+        try {await post('/scheduler/api/block/'+selected.id+'/toggle-lock/',{});dialog.close();calendar.refetchEvents();}
+        catch(e){dialog.close();error(e.message);}finally{this.disabled=false;}
+    };
+});
+</script>{% endblock %}

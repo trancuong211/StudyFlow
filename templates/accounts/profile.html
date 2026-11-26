@@ -3,7 +3,7 @@
 {% block title %}Hồ Sơ Cá Nhân – StudyFlow{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto">
+<div class="w-full">
     <!-- Header -->
     <div class="mb-6">
         <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Hồ sơ cá nhân</h1>
@@ -20,9 +20,11 @@
             </div>
             <p class="font-semibold text-slate-900">{{ user.full_name|default:user.username }}</p>
             <p class="text-sm text-slate-400">{{ user.username }}</p>
+            <a class="inline-block text-brand-700 mt-3" href="{% url 'accounts:password_change' %}">Đổi mật khẩu</a>
 
             <form method="post" class="mt-6 space-y-5 border-t border-slate-100 pt-6">
                 {% csrf_token %}
+                {% if form.non_field_errors %}<div class="sf-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
                 {% for field in form %}
                 <div>
                     <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1.5">{{ field.label }}</label>
@@ -52,7 +54,7 @@
         border-radius: 0.75rem;
         border: 1px solid #e2e8f0;
         padding: 0.625rem 0.875rem;
-        font-size: 0.875rem;
+        font-size: 1rem;
         line-height: 1.5;
         color: #1e293b;
         background-color: #fff;

@@ -61,7 +61,7 @@ class SmokePageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertNotIn('calendar_sync:sync', content)
-        self.assertIn(reverse('calendar_sync:connect'), content)
+        self.assertIn(reverse('calendar_sync:settings'), content)
 
     def test_sidebar_overlay_hidden_by_default(self):
         """Mục 10: overlay không còn class sidebar-overlay ở trạng thái mặc định."""
@@ -166,6 +166,13 @@ class TaskCourseInputTests(TestCase):
         self.assertIn('type="text"', match.group(0))
         self.assertNotIn('name="course"', content)
 
+    def test_create_form_renders_every_required_field(self):
+        content = self.client.get(reverse('tasks:create')).content.decode()
+        for name in ('course_name', 'title', 'priority', 'estimated_duration',
+                     'deadline', 'status', 'difficulty'):
+            with self.subTest(field=name):
+                self.assertIn(f'name="{name}"', content)
+
     def test_create_task_creates_new_course_by_name(self):
         response = self.client.post(reverse('tasks:create'), self._data('Đại số'))
         self.assertEqual(response.status_code, 302)
@@ -196,6 +203,15 @@ class TaskCourseInputTests(TestCase):
         self.assertEqual(response.status_code, 302)
         task = Task.objects.get(title='Task mới')
         self.assertEqual(task.difficulty, Task.Difficulty.MEDIUM)
+    def test_create_task_auto_schedules_block_on_calendar(self):
+        deadline = timezone.localtime(timezone.now() + timedelta(days=2))
+        data = self._data('', title='Auto schedule task')
+        data['deadline'] = deadline.strftime('%Y-%m-%dT%H:%M')
+        response = self.client.post(reverse('tasks:create'), data)
+        self.assertEqual(response.status_code, 302)
+        task = Task.objects.get(title='Auto schedule task')
+        self.assertTrue(task.schedule_blocks.exists())
+        self.assertTrue(task.is_scheduled)
 
     def test_edit_form_prefills_course_name(self):
         course = Course.objects.create(user=self.user, name='Hóa học')

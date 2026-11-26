@@ -18,6 +18,12 @@
     </div>
 
     <!-- Filter Bar -->
+    <form method="get" class="sf-card flex flex-wrap gap-3 items-end">
+        <div class="flex-1 min-w-[160px]"><label for="task-query" class="sf-label">Tìm công việc</label><input id="task-query" name="q" value="{{ query }}" placeholder="Tên công việc"></div>
+        <div><label for="task-course" class="sf-label">Môn học</label><select name="course" id="task-course"><option value="">Tất cả môn</option>{% for course in courses %}<option value="{{ course.pk }}" {% if course_filter == course.pk|stringformat:'s' %}selected{% endif %}>{{ course.name }}</option>{% endfor %}</select></div>
+        <div><label for="task-priority" class="sf-label">Ưu tiên</label><select name="priority" id="task-priority"><option value="">Tất cả</option><option value="4" {% if priority_filter == '4' %}selected{% endif %}>Khẩn cấp</option><option value="3" {% if priority_filter == '3' %}selected{% endif %}>Cao</option><option value="2" {% if priority_filter == '2' %}selected{% endif %}>Trung bình</option><option value="1" {% if priority_filter == '1' %}selected{% endif %}>Thấp</option></select></div>
+        {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}<button class="sf-secondary">Lọc</button>
+    </form>
     <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
         <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-medium text-slate-500 mr-1">Trạng thái:</span>
@@ -37,7 +43,7 @@
                     {% csrf_token %}
                     <button type="submit" class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0
                         {% if task.status == 'COMPLETED' %}bg-emerald-500 border-emerald-500 text-white{% else %}border-slate-300 hover:border-brand-500 hover:bg-brand-50{% endif %}"
-                        aria-label="Đánh dấu hoàn thành">
+                        aria-label="{% if task.status == 'COMPLETED' %}Đánh dấu chưa hoàn thành{% else %}Đánh dấu hoàn thành{% endif %}">
                         {% if task.status == 'COMPLETED' %}
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                         {% endif %}
@@ -63,7 +69,9 @@
                             <span class="{% if task.is_overdue %}text-red-600 font-semibold{% else %}text-slate-500{% endif %}">{{ task.deadline|date:"H:i - d/m/Y" }}</span>
                         </span>
                         <span>{{ task.estimated_duration }} phút</span>
-                        {% if task.is_scheduled %}
+                        {% if task.status == 'COMPLETED' %}
+                        <span class="text-emerald-600">Đã hoàn thành</span>
+                        {% elif task.is_scheduled %}
                         <span class="inline-flex items-center gap-1 text-emerald-600"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Đã xếp lịch</span>
                         {% else %}
                         <span class="inline-flex items-center gap-1 text-amber-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>Chưa xếp lịch</span>

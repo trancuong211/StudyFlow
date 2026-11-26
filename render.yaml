@@ -1,0 +1,105 @@
+# Paid resources; review Render's estimated cost before creating this Blueprint.
+envVarGroups:
+  - name: studyflow-shared
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AI_SERVICE_TOKEN
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: USE_SQLITE
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.11.11"
+services:
+  - type: web
+    name: studyflow-web
+    runtime: python
+    region: singapore
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: sh scripts/start-web.sh
+    healthCheckPath: /health/
+    disk:
+      name: studyflow-media
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - fromGroup: studyflow-shared
+      - key: MEDIA_ROOT
+        value: /var/data/media
+      - key: DATABASE_URL
+        fromDatabase: { name: studyflow-db, property: connectionString }
+      - key: CELERY_BROKER_URL
+        fromService:
+          { name: studyflow-redis, type: keyvalue, property: connectionString }
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          { name: studyflow-redis, type: keyvalue, property: connectionString }
+      - key: AI_SERVICE_HOSTPORT
+        fromService: { name: studyflow-ai, type: pserv, property: hostport }
+  - type: pserv
+    name: studyflow-ai
+    runtime: python
+    region: singapore
+    plan: 0.5c-512mb
+    buildCommand: pip install -r ai_service/requirements.txt
+    startCommand: uvicorn ai_service.main:app --host 0.0.0.0 --port 8001
+    envVars:
+      - fromGroup: studyflow-shared
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+  - type: worker
+    name: studyflow-worker
+    runtime: python
+    region: singapore
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A studyflow worker -l info --concurrency=2
+    envVars:
+      - fromGroup: studyflow-shared
+      - key: DATABASE_URL
+        fromDatabase: { name: studyflow-db, property: connectionString }
+      - key: CELERY_BROKER_URL
+        fromService:
+          { name: studyflow-redis, type: keyvalue, property: connectionString }
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          { name: studyflow-redis, type: keyvalue, property: connectionString }
+      - key: AI_SERVICE_HOSTPORT
+        fromService: { name: studyflow-ai, type: pserv, property: hostport }
+      - key: SITE_URL
+        sync: false
+  - type: worker
+    name: studyflow-beat
+    runtime: python
+    region: singapore
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A studyflow beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    envVars:
+      - fromGroup: studyflow-shared
+      - key: DATABASE_URL
+        fromDatabase: { name: studyflow-db, property: connectionString }
+      - key: CELERY_BROKER_URL
+        fromService:
+          { name: studyflow-redis, type: keyvalue, property: connectionString }
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          { name: studyflow-redis, type: keyvalue, property: connectionString }
+  - type: keyvalue
+    name: studyflow-redis
+    region: singapore
+    plan: 256mb
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+databases:
+  - name: studyflow-db
+    region: singapore
+    plan: basic-256mb
+    databaseName: studyflow
+    user: studyflow
+    ipAllowList: []

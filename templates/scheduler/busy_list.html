@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Lịch bận & ca làm – StudyFlow{% endblock %}
+
+{% block content %}
+    <div class="space-y-5">
+        <div class="flex flex-wrap justify-between gap-4 items-center">
+            <div>
+                <h1 class="text-2xl font-bold">Lịch bận & ca làm</h1>
+                <p class="text-slate-600 mt-1">Lịch lên lớp, làm thêm và hoạt động cá nhân sẽ được loại khỏi giờ học.</p>
+            </div>
+            <a class="sf-button" href="{% url 'scheduler:busy_create' %}">Thêm lịch bận</a>
+        </div>
+
+        {% for period in periods %}
+            <article class="sf-card flex flex-wrap justify-between gap-4">
+                <div>
+                    <h2 class="font-semibold">{{ period.title }}</h2>
+                    <p class="text-sm text-slate-600 mt-1">
+                        {{ period.start_time|date:'H:i d/m/Y' }} → {{ period.end_time|date:'H:i d/m/Y' }}
+                    </p>
+
+                    {% if period.repeats_weekly %}
+                        <p class="text-sm text-brand-700 mt-1">
+                            Lặp hằng tuần{% if period.repeat_until %} đến {{ period.repeat_until|date:'d/m/Y' }}{% endif %}
+                        </p>
+                    {% endif %}
+
+                    {% if period.notes %}
+                        <p class="text-sm text-slate-600 mt-2 whitespace-pre-line">{{ period.notes }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a class="sf-secondary" href="{% url 'scheduler:busy_edit' period.pk %}">Sửa</a>
+                    <a class="text-red-700" href="{% url 'scheduler:busy_delete' period.pk %}">Xóa</a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="sf-card">
+                Chưa có lịch bận. Thêm lịch lên lớp hoặc ca làm trước khi tự động sắp lịch.
+            </div>
+        {% endfor %}
+
+        <div>
+            <a class="sf-secondary inline-block" href="{% url 'scheduler:calendar' %}">Xem lịch học</a>
+        </div>
+    </div>
+{% endblock %}

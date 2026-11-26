@@ -8,6 +8,7 @@ from apps.tasks.models import Task
 from apps.scheduler.models import ScheduleBlock
 from apps.pomodoro.models import PomodoroSession
 from apps.ai_assistant.models import AIInsight
+from apps.ai_assistant.services import habit_analysis
 
 @login_required
 def index(request):
@@ -40,6 +41,8 @@ def index(request):
     today_pomodoro_mins = PomodoroSession.objects.filter(
         user=request.user,
         start_time__gte=today_start,
+        start_time__lte=today_end,
+        session_type=PomodoroSession.SessionType.WORK,
         completed=True
     ).aggregate(total=Sum('duration_minutes'))['total'] or 0
 
@@ -51,7 +54,7 @@ def index(request):
     ).order_by('start_time')
 
     # AI Insight mới nhất
-    latest_insight = AIInsight.objects.filter(user=request.user).first()
+    latest_insight = AIInsight.objects.filter(user=request.user, is_dismissed=False).first()
 
     context = {
         'total_courses': total_courses,
@@ -60,5 +63,8 @@ def index(request):
         'today_pomodoro_mins': today_pomodoro_mins,
         'today_schedule_blocks': today_schedule_blocks,
         'latest_insight': latest_insight,
+        'habits': habit_analysis(request.user),
+        'daily_summary': AIInsight.objects.filter(user=request.user, insight_type='DAILY_SUMMARY', created_at__gte=today_start, is_dismissed=False).first(),
+        'unread_count': request.user.notifications.filter(is_read=False).count(),
     }
     return render(request, 'dashboard/index.html', context)

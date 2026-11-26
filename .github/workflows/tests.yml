@@ -1,0 +1,33 @@
+name: StudyFlow checks
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: studyflow
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: studyflow
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U studyflow" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DEBUG: "True"
+      USE_SQLITE: "False"
+      DATABASE_URL: postgres://studyflow:test-only-password@localhost:5432/studyflow
+      OPENAI_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: pip install -r requirements.txt
+      - run: npm ci && npm run build
+      - run: git diff --exit-code -- static/css/tailwind.css static/vendor
+      - run: python manage.py check && python manage.py makemigrations --check --dry-run
+      - run: python manage.py test --verbosity 2

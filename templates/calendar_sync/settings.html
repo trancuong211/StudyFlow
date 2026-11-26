@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Google Calendar – StudyFlow{% endblock %}
+
+{% block content %}
+    <div class="w-full space-y-5">
+        <h1 class="text-2xl font-bold">Google Calendar</h1>
+
+        <div class="sf-card space-y-4">
+            <p>Nhập sự kiện Google làm lịch bận và xuất khung học lên Google Calendar. Việc chỉnh khung học được thực hiện trong StudyFlow.</p>
+
+            {% if token %}
+                <p class="font-medium text-emerald-700">Đã kết nối · {{ event_count }} sự kiện đã nhập</p>
+                <p class="text-sm text-slate-600">Đồng bộ gần nhất: {{ token.last_synced_at|date:'H:i d/m/Y'|default:'Chưa đồng bộ' }}</p>
+
+                <div class="flex flex-wrap gap-3">
+                    <form method="post" action="{% url 'calendar_sync:sync' %}" data-loading-form>
+                        {% csrf_token %}
+                        <button class="sf-button" type="submit">Đồng bộ ngay</button>
+                    </form>
+                    <a class="sf-secondary" href="{% url 'calendar_sync:connect' %}">Kết nối lại</a>
+                    <form method="post" action="{% url 'calendar_sync:disconnect' %}">
+                        {% csrf_token %}
+                        <button class="sf-secondary text-red-700" type="submit">Ngắt kết nối</button>
+                    </form>
+                </div>
+            {% elif configured %}
+                <a class="sf-button inline-block" href="{% url 'calendar_sync:connect' %}">Kết nối tài khoản Google</a>
+            {% else %}
+                <p class="sf-error" role="status">Chưa cấu hình Google Calendar. Bạn vẫn có thể nhập lịch bận thủ công.</p>
+                <a class="sf-secondary inline-block" href="{% url 'scheduler:busy_create' %}">Thêm lịch bận</a>
+            {% endif %}
+
+            <p class="text-sm text-slate-600">
+                Sự kiện cả ngày và lịch lặp được nhập theo múi giờ của bạn. Sau khi đồng bộ, kiểm tra lịch và chạy lại lập lịch nếu có xung đột.
+            </p>
+        </div>
+    </div>
+{% endblock %}

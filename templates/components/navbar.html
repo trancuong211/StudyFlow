@@ -1,7 +1,8 @@
 <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
         <!-- Logo & Mobile Menu Button -->
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-4 shrink-0">
+            {% if user.is_authenticated %}
             <button
                 type="button"
                 id="sidebarToggle"
@@ -14,6 +15,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
+            {% endif %}
 
             <a href="{% url 'dashboard:index' %}" class="flex items-center space-x-2" aria-label="StudyFlow - Trang chủ">
                 <span class="text-2xl font-extrabold bg-gradient-to-r from-brand-600 to-indigo-600 bg-clip-text text-transparent">
@@ -26,22 +28,22 @@
         </div>
 
         <!-- Right side: User menu -->
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-3 min-w-0">
             {% if user.is_authenticated %}
-                <div class="relative" id="userMenu">
+                <div class="relative min-w-0" id="userMenu">
                     <button
                         type="button"
                         id="userMenuButton"
-                        class="flex items-center space-x-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+                        class="flex items-center space-x-2 w-full min-w-0 p-1.5 rounded-xl hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
                         aria-expanded="false"
                         aria-haspopup="true"
                         aria-label="Menu người dùng"
                     >
-                        <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-sm">
+                        <div class="w-8 h-8 shrink-0 rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-sm">
                             {{ user.username|slice:":1"|upper }}
                         </div>
-                        <span class="hidden md:inline font-medium text-slate-700 text-sm">{{ user.full_name|default:user.username }}</span>
-                        <svg class="w-4 h-4 text-slate-400 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <span class="hidden md:inline min-w-0 truncate font-medium text-slate-700 text-sm">{{ user.full_name|default:user.username }}</span>
+                        <svg class="w-4 h-4 shrink-0 text-slate-400 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
@@ -81,8 +83,8 @@
                 </div>
             {% else %}
                 <div class="flex items-center space-x-2">
-                    <a href="{% url 'accounts:login' %}" class="text-sm font-medium text-slate-700 hover:text-brand-600 transition-colors px-3 py-2 rounded-lg">Đăng nhập</a>
-                    <a href="{% url 'accounts:register' %}" class="text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl shadow-sm transition-colors">Đăng ký</a>
+                    <a href="{% url 'accounts:login' %}" class="text-sm font-medium text-slate-700 hover:text-brand-600 transition-colors px-2 sm:px-3 py-2 rounded-lg">Đăng nhập</a>
+                    <a href="{% url 'accounts:register' %}" class="text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white px-2 sm:px-4 py-2 rounded-xl shadow-sm transition-colors">Đăng ký</a>
                 </div>
             {% endif %}
         </div>

@@ -1,0 +1,5 @@
+-r requirements.txt
+playwright>=1.63
+PyYAML>=6.0
+jsonschema>=4.26
+pip-audit>=2.10

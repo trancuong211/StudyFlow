@@ -1,0 +1,14 @@
+{
+  "name": "studyflow-assets",
+  "private": true,
+  "scripts": {
+    "build": "tailwindcss -i static/css/tailwind-input.css -o static/css/tailwind.css --minify && node scripts/build-assets.cjs"
+  },
+  "devDependencies": {
+    "tailwindcss": "4.3.0",
+    "@tailwindcss/cli": "4.3.0",
+    "fullcalendar": "6.1.21",
+    "@fullcalendar/luxon3": "6.1.21",
+    "luxon": "3.7.2"
+  }
+}
