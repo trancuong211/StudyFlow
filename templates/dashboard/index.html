@@ -95,9 +95,12 @@
                 </p>
                 {% endif %}
             </div>
-            <a href="{% url 'ai_assistant:generate_insight' %}" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium border border-white/20 transition-colors whitespace-nowrap self-start sm:self-center">
-                Phân tích lại
-            </a>
+            <form method="post" action="{% url 'ai_assistant:generate_insight' %}" class="self-start sm:self-center">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium border border-white/20 transition-colors whitespace-nowrap">
+                    Phân tích lại
+                </button>
+            </form>
         </div>
     </div>
     {% endif %}

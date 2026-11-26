@@ -10,4 +10,8 @@ class CustomUserCreationForm(UserCreationForm):
 class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = User
-        fields = ('username', 'email', 'full_name', 'timezone', 'daily_study_goal_hours')
+        fields = (
+            'username', 'email', 'full_name', 'timezone',
+            'daily_study_goal_hours', 'study_start_hour', 'study_end_hour',
+            'email_reminders',
+        )

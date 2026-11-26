@@ -4,14 +4,40 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+import logging
 import unicodedata
 from .models import Task
 from apps.courses.models import Course
+from apps.scheduler.engine.optimizer import ScheduleOptimizer
+
+logger = logging.getLogger(__name__)
+
+
+def _auto_schedule(user):
+    """Chạy lại thuật toán lập lịch; trả về (thành_công, số_block_tạo_mới)."""
+    try:
+        blocks = ScheduleOptimizer(user=user).run()
+        return True, len(blocks)
+    except Exception:
+        logger.exception('Tự động xếp lịch thất bại cho user_id=%s', user.pk)
+        return False, 0
+
 
 class TaskForm(forms.ModelForm):
     deadline = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        widget=forms.DateTimeInput(
+            attrs={'type': 'datetime-local'},
+            format='%Y-%m-%dT%H:%M',
+        ),
         label='Hạn chót (Deadline)'
+    )
+    difficulty = forms.TypedChoiceField(
+        label='Độ khó',
+        choices=Task.Difficulty.choices,
+        coerce=int,
+        empty_value=Task.Difficulty.MEDIUM,
+        required=False,
+        initial=Task.Difficulty.MEDIUM,
     )
     # Tự nhập tên môn học thay vì chọn từ dropdown
     course_name = forms.CharField(
@@ -91,7 +117,11 @@ def task_create(request):
             task.user = request.user
             task.course = form.resolve_course()
             task.save()
-            messages.success(request, f'Đã thêm công việc "{task.title}" thành công!')
+            scheduled, count = _auto_schedule(request.user)
+            if scheduled:
+                messages.success(request, f'Đã thêm công việc "{task.title}" và xếp {count} khung giờ học vào lịch!')
+            else:
+                messages.warning(request, f'Đã lưu công việc "{task.title}" nhưng chưa thể tự động xếp lịch. Hãy bấm "Tự động sắp lịch" trên trang Lịch.')
             return redirect('tasks:list')
     else:
         form = TaskForm(user=request.user)
@@ -106,7 +136,11 @@ def task_update(request, pk):
             task = form.save(commit=False)
             task.course = form.resolve_course()
             task.save()
-            messages.success(request, f'Cập nhật "{task.title}" thành công!')
+            scheduled, count = _auto_schedule(request.user)
+            if scheduled:
+                messages.success(request, f'Cập nhật "{task.title}" thành công và đã xếp lại {count} khung giờ học!')
+            else:
+                messages.warning(request, f'Đã cập nhật "{task.title}" nhưng chưa thể tự động xếp lại lịch. Hãy bấm "Tự động sắp lịch" trên trang Lịch.')
             return redirect('tasks:list')
     else:
         form = TaskForm(instance=task, user=request.user)

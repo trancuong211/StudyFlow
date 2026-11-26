@@ -13,6 +13,9 @@ class User(AbstractUser):
         'Mục tiêu học mỗi ngày (giờ)', default=4
     )
     is_google_connected = models.BooleanField('Đã kết nối Google Calendar', default=False)
+    email_reminders = models.BooleanField('Nhận nhắc việc qua email', default=True)
+    study_start_hour = models.PositiveSmallIntegerField('Giờ bắt đầu học', default=8)
+    study_end_hour = models.PositiveSmallIntegerField('Giờ kết thúc học', default=22)
     created_at = models.DateTimeField('Ngày tạo', auto_now_add=True)
     updated_at = models.DateTimeField('Ngày cập nhật', auto_now=True)
 

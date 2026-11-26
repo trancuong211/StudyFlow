@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.ai_assistant.models import AIInsight
+from apps.ai_assistant.models import AIConfiguration, AIInsight
 from apps.calendar_sync.models import GoogleCalendarToken
 from apps.courses.models import Course
 from apps.scheduler.engine.optimizer import ScheduleOptimizer
@@ -189,6 +189,14 @@ class TaskCourseInputTests(TestCase):
         self.assertIsNone(task.course)
         self.assertFalse(Course.objects.filter(user=self.user).exists())
 
+    def test_create_task_defaults_difficulty_when_field_is_missing(self):
+        data = self._data('')
+        data.pop('difficulty')
+        response = self.client.post(reverse('tasks:create'), data)
+        self.assertEqual(response.status_code, 302)
+        task = Task.objects.get(title='Task mới')
+        self.assertEqual(task.difficulty, Task.Difficulty.MEDIUM)
+
     def test_edit_form_prefills_course_name(self):
         course = Course.objects.create(user=self.user, name='Hóa học')
         task = Task.objects.create(
@@ -283,6 +291,10 @@ class AIAssistantTests(TestCase):
     def setUp(self):
         self.client.force_login(self.user)
 
+    def test_generate_insight_get_returns_405(self):
+        response = self.client.get(reverse('ai_assistant:generate_insight'))
+        self.assertEqual(response.status_code, 405)
+
     def test_service_error_falls_back_to_heuristic(self):
         fake_response = mock.Mock(status_code=500)
         with mock.patch('apps.ai_assistant.services.requests.post', return_value=fake_response):
@@ -307,6 +319,98 @@ class AIAssistantTests(TestCase):
     def test_insights_page_returns_200(self):
         response = self.client.get(reverse('ai_assistant:insights'))
         self.assertEqual(response.status_code, 200)
+
+    def test_ai_settings_page_returns_200(self):
+        response = self.client.get(reverse('ai_assistant:settings'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_ai_settings_saves_encrypted_key(self):
+        response = self.client.post(reverse('ai_assistant:settings'), {
+            'provider': 'openai',
+            'model_name': 'gpt-4o-mini',
+            'api_key': 'sk-secret-1234',
+            'is_active': 'on',
+        })
+        self.assertEqual(response.status_code, 302)
+        config = AIConfiguration.objects.get(user=self.user)
+        self.assertTrue(config.has_api_key)
+        self.assertNotIn('sk-secret-1234', config.api_key_encrypted)
+        self.assertEqual(config.get_api_key(), 'sk-secret-1234')
+        self.assertEqual(config.key_hint, '...1234')
+
+    def test_ai_settings_hides_model_until_key_present(self):
+        response = self.client.get(reverse('ai_assistant:settings'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="model-field" class="hidden"')
+
+    def test_ai_settings_custom_requires_base_url_and_model(self):
+        response = self.client.post(reverse('ai_assistant:settings'), {
+            'provider': 'custom',
+            'model_name': '',
+            'base_url': '',
+            'is_active': 'on',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('base_url', response.context['form'].errors)
+        self.assertIn('model_name', response.context['form'].errors)
+
+    def test_models_endpoint_requires_api_key(self):
+        response = self.client.post(reverse('ai_assistant:models'), {'provider': 'openai'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('error', response.json())
+
+    def test_models_endpoint_lists_models_with_tiers(self):
+        fake_response = mock.Mock(status_code=200)
+        fake_response.json.return_value = {
+            'data': [
+                {
+                    'id': 'meta-llama/llama-3-8b-instruct:free',
+                    'name': 'Llama 3 Free',
+                    'pricing': {'prompt': '0', 'completion': '0'},
+                },
+                {
+                    'id': 'openai/gpt-4o',
+                    'name': 'GPT-4o',
+                    'pricing': {'prompt': '0.000005', 'completion': '0.000015'},
+                },
+            ]
+        }
+
+        with mock.patch('apps.ai_assistant.views.requests.get', return_value=fake_response):
+            response = self.client.post(reverse('ai_assistant:models'), {
+                'provider': 'custom',
+                'base_url': 'https://openrouter.ai/api/v1',
+                'api_key': 'sk-test-key',
+            })
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload['count'], 2)
+        tiers = {model['id']: model['tier'] for model in payload['models']}
+        self.assertEqual(tiers['meta-llama/llama-3-8b-instruct:free'], 'free')
+        self.assertEqual(tiers['openai/gpt-4o'], 'paid')
+        self.assertEqual(payload['models'][0]['tier'], 'free')
+
+    def test_user_config_uses_own_key_not_fastapi(self):
+        config = AIConfiguration.objects.create(user=self.user, provider='openai')
+        config.set_api_key('sk-user-key')
+        config.save()
+
+        message = mock.Mock(content='{"title": "Tiêu đề AI", "summary": "Tóm tắt", "advice": "Lời khuyên"}')
+        fake_response = mock.Mock(choices=[mock.Mock(message=message)])
+        fake_client = mock.Mock()
+        fake_client.chat.completions.create.return_value = fake_response
+
+        with mock.patch('openai.OpenAI', return_value=fake_client) as openai_cls, \
+                mock.patch('apps.ai_assistant.services.requests.post') as post:
+            response = self.client.post(reverse('ai_assistant:generate_insight'))
+
+        self.assertEqual(response.status_code, 302)
+        openai_cls.assert_called_once()
+        post.assert_not_called()
+        insight = AIInsight.objects.filter(user=self.user).latest('created_at')
+        self.assertEqual(insight.title, 'Tiêu đề AI')
+        self.assertEqual(insight.content, 'Tóm tắt')
 
 
 class TimeZoneTests(TestCase):
