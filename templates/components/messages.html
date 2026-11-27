@@ -1,49 +1,23 @@
 {% if messages %}
-<div class="fixed top-4 inset-x-4 z-50 flex flex-col space-y-2" role="region" aria-live="polite" aria-label="Thông báo">
+<div class="messages" role="region" aria-live="polite" aria-label="Thông báo">
     {% for message in messages %}
-    <div class="alert-dismissible flex items-start space-x-3 p-4 rounded-xl shadow-lg border animate-slide-in
-        {% if message.tags == 'error' %}
-            bg-white text-red-800 border-red-200
-        {% elif message.tags == 'success' %}
-            bg-white text-emerald-800 border-emerald-200
-        {% elif message.tags == 'warning' %}
-            bg-white text-amber-800 border-amber-200
-        {% else %}
-            bg-white text-blue-800 border-blue-200
-        {% endif %}"
-         role="alert"
-    >
-        <div class="flex-shrink-0 w-5 h-5 mt-0.5" aria-hidden="true">
-            {% if message.tags == 'error' %}
-                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
-            {% elif message.tags == 'success' %}
-                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+    <div class="message{% if message.tags == 'success' %} message--success{% elif message.tags == 'warning' %} message--warning{% elif message.tags == 'error' %} message--error{% endif %}" role="alert" data-autodismiss>
+        <span class="message__icon" aria-hidden="true">
+            {% if message.tags == 'success' %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
             {% elif message.tags == 'warning' %}
-                <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            {% elif message.tags == 'error' %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
             {% else %}
-                <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
             {% endif %}
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium">{{ message }}</p>
-        </div>
-        <button
-            type="button"
-            class="flex-shrink-0 p-1 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
-            aria-label="Đóng thông báo"
-            onclick="this.parentElement.remove()"
-        >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </span>
+        <div class="message__body">{{ message }}</div>
+        <button type="button" class="message__close" data-dismiss aria-label="Đóng thông báo">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
     </div>
     {% endfor %}
 </div>
-
-<style>
-    @keyframes slide-in {
-        from { opacity: 0; transform: translateX(100%); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-    .animate-slide-in { animation: slide-in 0.3s ease-out; }
-</style>
 {% endif %}

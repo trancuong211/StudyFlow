@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng nhập — StudyFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .auth-shell { min-height:100vh; display:grid; grid-template-columns:1fr 1fr; }
+    @media (max-width:900px){ .auth-shell { grid-template-columns:1fr; } .auth-aside { display:none; } }
+    .auth-aside { background:var(--primary); color:#fff; display:flex; flex-direction:column; justify-content:space-between; padding:var(--sp-6); position:relative; overflow:hidden; }
+    .auth-aside__brand { display:flex; align-items:center; gap:var(--sp-2); }
+    .auth-aside__brand .sidebar__logo { background:#fff; color:var(--primary); }
+    .auth-aside__quote { font-family:var(--font-heading); font-size:var(--text-xl); line-height:var(--lh-snug); max-width:380px; }
+    .auth-aside__quote-attr { font-size:var(--text-sm); opacity:0.7; margin-top:var(--sp-3); }
+    .auth-aside__footer { font-size:var(--text-xs); opacity:0.6; }
+    .auth-main { display:flex; align-items:center; justify-content:center; padding:var(--sp-5); }
+    .auth-form { width:100%; max-width:360px; }
+    .auth-form__head { margin-bottom:var(--sp-5); }
+    .auth-form__head h1 { font-size:var(--text-2xl); }
+    .auth-form__head p { font-size:var(--text-sm); color:var(--text-muted); margin-top:var(--sp-1); }
+    .auth-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:var(--sp-5); }
+    .auth-tab { flex:1; text-align:center; padding:var(--sp-2) 0; font-size:var(--text-sm); font-weight:500; color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:color var(--transition), border-color var(--transition); cursor:pointer; }
+    .auth-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .auth-form .btn--primary { width:100%; margin-top:var(--sp-2); }
+    .auth-divider { display:flex; align-items:center; gap:var(--sp-3); margin:var(--sp-4) 0; font-size:var(--text-xs); color:var(--text-faint); }
+    .auth-divider::before, .auth-divider::after { content:""; flex:1; height:1px; background:var(--border); }
+    .pw-field { position:relative; }
+    .pw-toggle { position:absolute; right:var(--sp-3); top:50%; transform:translateY(-50%); color:var(--text-faint); cursor:pointer; }
+    .pw-strength { display:flex; gap:4px; margin-top:var(--sp-2); }
+    .pw-strength span { flex:1; height:3px; border-radius:var(--r-full); background:var(--border); }
+    .pw-strength span.fill-1 { background:var(--danger); }
+    .pw-strength span.fill-2 { background:var(--warning); }
+    .pw-strength span.fill-3 { background:var(--success); }
+  </style>
+</head>
+<body>
+  <div class="auth-shell">
+    <!-- Left visual panel -->
+    <aside class="auth-aside">
+      <div class="auth-aside__brand">
+        <div class="sidebar__logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.92 12 5 2.58 10.92 12 16.84l9.42-5.92Z"/><path d="M12 16.84V22"/><path d="m5 13.5 7 4.5 7-4.5"/></svg></div>
+        <div><div class="sidebar__name" style="color:#fff;">StudyFlow</div></div>
+      </div>
+
+      <div>
+        <div class="auth-aside__quote">"Kế hoạch tốt hôm nay sẽ nhẹ nhàng hơn cho ngày mai."</div>
+        <div class="auth-aside__quote-attr">— Một sinh viên đã hoàn thành đúng hạn</div>
+      </div>
+
+      <div class="auth-aside__footer">StudyFlow · Lập kế hoạch học tập cá nhân</div>
+    </aside>
+
+    <!-- Right form -->
+    <main class="auth-main">
+      <div class="auth-form">
+        <div class="auth-form__head">
+          <h1>Đăng nhập</h1>
+          <p>Chào mừng bạn quay lại StudyFlow.</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="auth-tabs">
+          <div class="auth-tab active">Đăng nhập</div>
+          <a href="signup.html" class="auth-tab" style="text-decoration:none;">Đăng ký</a>
+        </div>
+
+        <form onsubmit="event.preventDefault(); window.location.href='dashboard.html';">
+          <div class="field">
+            <label class="field__label">Email <span class="req">*</span></label>
+            <input class="input" type="email" placeholder="linh.nt@st.edu.vn" value="linh.nt@st.edu.vn" />
+            <div class="field__error">Email không hợp lệ.</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Mật khẩu <span class="req">*</span></label>
+            <div class="pw-field">
+              <input class="input" type="password" placeholder="••••••••" value="12345678" />
+              <span class="pw-toggle" onclick="var i=this.previousElementSibling; i.type=i.type==='password'?'text':'password';">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+            </div>
+            <div class="field__hint" style="display:flex; justify-content:space-between; margin-top:var(--sp-1);">
+              <span>Tối thiểu 8 ký tự</span>
+              <a href="#" style="color:var(--primary);">Quên mật khẩu?</a>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--primary">
+            Đăng nhập
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </form>
+
+        <div class="auth-divider">hoặc</div>
+
+        <button class="btn btn--secondary" style="width:100%;">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"/></svg>
+          Tiếp tục với Google
+        </button>
+
+        <p style="text-align:center; font-size:var(--text-xs); color:var(--text-faint); margin-top:var(--sp-5);">
+          Chưa có tài khoản? <a href="signup.html" style="color:var(--primary); font-weight:500;">Đăng ký ngay</a>
+        </p>
+      </div>
+    </main>
+  </div>
+  <script src="css/app.js"></script>
+</body>
+</html>

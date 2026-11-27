@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nhiệm vụ — StudyFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .filter-tabs { display:flex; gap:var(--sp-1); border-bottom:1px solid var(--border); margin-bottom:var(--sp-4); }
+    .filter-tab { padding:var(--sp-2) var(--sp-4); font-size:var(--text-sm); font-weight:500; color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:color var(--transition), border-color var(--transition); }
+    .filter-tab:hover { color:var(--text); }
+    .filter-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .filter-tab .count { font-size:var(--text-xs); color:var(--text-faint); margin-left:4px; }
+    .toolbar { display:flex; gap:var(--sp-3); flex-wrap:wrap; align-items:center; margin-bottom:var(--sp-4); }
+    .search-box { position:relative; flex:1; min-width:200px; }
+    .search-box svg { position:absolute; left:var(--sp-3); top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-faint); }
+    .search-box .input { padding-left:36px; }
+    .task-grid { display:grid; grid-template-columns:1fr; gap:var(--sp-2); }
+    @media (min-width:768px){ .task-grid { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.92 12 5 2.58 10.92 12 16.84l9.42-5.92Z"/><path d="M12 16.84V22"/><path d="m5 13.5 7 4.5 7-4.5"/></svg>
+        </div>
+        <div>
+          <div class="sidebar__name">StudyFlow</div>
+          <div class="sidebar__tag">Lịch học cá nhân</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <div class="sidebar__section-label">Hôm nay</div>
+        <a href="dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Tổng quan</a>
+        <a href="tasks.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Nhiệm vụ<span class="nav-item__badge">8</span></a>
+        <a href="schedule.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Lịch học</a>
+        <a href="flashcards.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M6 12h12"/></svg>Flashcard</a>
+        <div class="sidebar__section-label">Khác</div>
+        <a href="chat.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Trợ lý AI<span class="nav-item__badge">Mới</span></a>
+        <a href="profile.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>Hồ sơ</a>
+      </nav>
+      <div class="sidebar__footer">
+        <button class="theme-toggle" onclick="sfToggleTheme()" style="flex:1"><span data-theme-icon>☾</span><span>Giao diện tối</span></button>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" onclick="sfCloseSidebar()"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="topbar__menu-btn" onclick="sfOpenSidebar()" aria-label="Mở menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <span class="topbar__brand">StudyFlow</span>
+      </header>
+
+      <main class="content">
+        <div class="page-head" style="display:flex; align-items:flex-end; justify-content:space-between; gap:var(--sp-4); flex-wrap:wrap;">
+          <div>
+            <h1>Nhiệm vụ</h1>
+            <p class="page-head__sub">8 việc cần làm · 1 quá hạn · 3 đã xong tuần này</p>
+          </div>
+          <button class="btn btn--primary" onclick="sfOpenModal('modal-task')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Thêm nhiệm vụ
+          </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input class="input" placeholder="Tìm nhiệm vụ…" />
+          </div>
+          <select class="select" style="width:auto;">
+            <option>Tất cả học phần</option>
+            <option>Cấu trúc dữ liệu</option>
+            <option>Xác suất thống kê</option>
+            <option>Mạng máy tính</option>
+            <option>Triết học Mác-Lênin</option>
+            <option>Tiếng Anh B1</option>
+          </select>
+          <select class="select" style="width:auto;">
+            <option>Sắp đến hạn</option>
+            <option>Ưu tiên cao nhất</option>
+            <option>Mới nhất</option>
+          </select>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="filter-tabs">
+          <button class="filter-tab active">Tất cả<span class="count">8</span></button>
+          <button class="filter-tab">Cần làm<span class="count">5</span></button>
+          <button class="filter-tab">Đang làm<span class="count">2</span></button>
+          <button class="filter-tab">Quá hạn<span class="count">1</span></button>
+          <button class="filter-tab">Đã xong<span class="count">3</span></button>
+        </div>
+
+        <!-- Task grid -->
+        <div class="task-grid">
+          <div class="task-row">
+            <div class="task-row__check" data-task-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="task-row__body">
+              <div class="task-row__title"><a href="detail.html">Làm bài tập lớn Xác suất thống kê — Bài 3</a></div>
+              <div class="task-row__meta">
+                <span class="badge badge--accent"><span class="course-dot" style="background:var(--accent)"></span>Xác suất thống kê</span>
+                <span class="badge badge--warning"><span class="badge__dot"></span>Quá hạn</span>
+                <span class="badge">Ưu tiên cao</span>
+                <span class="badge">2/3 pomodoro</span>
+              </div>
+            </div>
+            <div class="task-row__actions">
+              <button class="btn btn--ghost btn--icon btn--sm" aria-label="Bật Pomodoro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M19 3l3 3"/></svg></button>
+              <a href="detail.html" class="btn btn--ghost btn--icon btn--sm" aria-label="Chi tiết"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-row__check" data-task-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="task-row__body">
+              <div class="task-row__title"><a href="detail.html">Ôn tập bài giảng Networking — TCP/IP model</a></div>
+              <div class="task-row__meta">
+                <span class="badge badge--primary"><span class="course-dot" style="background:#5b8a72"></span>Mạng máy tính</span>
+                <span class="badge">Hôm nay 16:00</span>
+                <span class="badge">Ưu tiên vừa</span>
+                <span class="badge">0/2 pomodoro</span>
+              </div>
+            </div>
+            <div class="task-row__actions">
+              <button class="btn btn--ghost btn--icon btn--sm" aria-label="Bật Pomodoro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M19 3l3 3"/></svg></button>
+              <a href="detail.html" class="btn btn--ghost btn--icon btn--sm" aria-label="Chi tiết"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-row__check" data-task-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="task-row__body">
+              <div class="task-row__title"><a href="detail.html">Nộp tiểu luận Triết học Mác-Lênin</a></div>
+              <div class="task-row__meta">
+                <span class="badge badge--primary"><span class="course-dot" style="background:#8b7355"></span>Triết học Mác-Lênin</span>
+                <span class="badge">Còn 2 ngày · 29/11</span>
+                <span class="badge">Ưu tiên cao</span>
+                <span class="badge">3/4 pomodoro</span>
+              </div>
+            </div>
+            <div class="task-row__actions">
+              <button class="btn btn--ghost btn--icon btn--sm" aria-label="Bật Pomodoro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M19 3l3 3"/></svg></button>
+              <a href="detail.html" class="btn btn--ghost btn--icon btn--sm" aria-label="Chi tiết"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-row__check" data-task-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="task-row__body">
+              <div class="task-row__title"><a href="detail.html">Thực hành Lab Mạng máy tính — Bài 5</a></div>
+              <div class="task-row__meta">
+                <span class="badge badge--primary"><span class="course-dot" style="background:#5b8a72"></span>Mạng máy tính</span>
+                <span class="badge">Còn 4 ngày · 01/12</span>
+                <span class="badge">Ưu tiên vừa</span>
+                <span class="badge">1/3 pomodoro</span>
+              </div>
+            </div>
+            <div class="task-row__actions">
+              <button class="btn btn--ghost btn--icon btn--sm" aria-label="Bật Pomodoro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M19 3l3 3"/></svg></button>
+              <a href="detail.html" class="btn btn--ghost btn--icon btn--sm" aria-label="Chi tiết"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
+            </div>
+          </div>
+
+          <div class="task-row">
+            <div class="task-row__check" data-task-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="task-row__body">
+              <div class="task-row__title"><a href="detail.html">Học từ vựng Tiếng Anh B1 — Unit 8</a></div>
+              <div class="task-row__meta">
+                <span class="badge badge--primary"><span class="course-dot" style="background:#6b6395"></span>Tiếng Anh B1</span>
+                <span class="badge">Còn 6 ngày · 03/12</span>
+                <span class="badge">Ưu tiên thấp</span>
+                <span class="badge">0/2 pomodoro</span>
+              </div>
+            </div>
+            <div class="task-row__actions">
+              <button class="btn btn--ghost btn--icon btn--sm" aria-label="Bật Pomodoro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M19 3l3 3"/></svg></button>
+              <a href="detail.html" class="btn btn--ghost btn--icon btn--sm" aria-label="Chi tiết"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
+            </div>
+          </div>
+
+          <div class="task-row is-done">
+            <div class="task-row__check" data-task-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="task-row__body">
+              <div class="task-row__title"><a href="detail.html">Đọc chương 4 — Cấu trúc dữ liệu và giải thuật</a></div>
+              <div class="task-row__meta">
+                <span class="badge badge--primary"><span class="course-dot" style="background:var(--primary)"></span>Cấu trúc dữ liệu</span>
+                <span class="badge badge--success">Đã xong · 08:30</span>
+              </div>
+            </div>
+            <div class="task-row__actions">
+              <a href="detail.html" class="btn btn--ghost btn--icon btn--sm" aria-label="Chi tiết"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Bottom tab bar -->
+  <nav class="tabbar">
+    <div class="tabbar__items">
+      <a href="dashboard.html" class="tabbar__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Tổng quan</a>
+      <a href="tasks.html" class="tabbar__item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Nhiệm vụ</a>
+      <a href="schedule.html" class="tabbar__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Lịch</a>
+      <a href="chat.html" class="tabbar__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>AI</a>
+      <a href="profile.html" class="tabbar__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>Hồ sơ</a>
+    </div>
+  </nav>
+
+  <!-- Add task modal -->
+  <div class="modal-overlay" id="modal-task">
+    <div class="modal" role="dialog" aria-labelledby="modal-task-title">
+      <div class="modal__head">
+        <div class="modal__title" id="modal-task-title">Thêm nhiệm vụ</div>
+        <button class="btn btn--ghost btn--icon btn--sm" onclick="sfCloseModal('modal-task')" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="modal__body">
+        <div class="field"><label class="field__label">Tiêu đề <span class="req">*</span></label><input class="input" placeholder="VD: Ôn tập chương 3" /><div class="field__error">Vui lòng nhập tiêu đề.</div></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-4);">
+          <div class="field"><label class="field__label">Học phần</label><select class="select"><option>Chọn học phần…</option><option>Cấu trúc dữ liệu</option><option>Xác suất thống kê</option><option>Mạng máy tính</option><option>Triết học Mác-Lênin</option><option>Tiếng Anh B1</option></select></div>
+          <div class="field"><label class="field__label">Hạn chót</label><input class="input" type="datetime-local" /></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-4);">
+          <div class="field"><label class="field__label">Ưu tiên</label><select class="select"><option>Thấp</option><option selected>Trung bình</option><option>Cao</option></select></div>
+          <div class="field"><label class="field__label">Số pomodoro</label><input class="input" type="number" value="2" min="1" max="20" /></div>
+        </div>
+        <div class="field"><label class="field__label">Ghi chú</label><textarea class="textarea" placeholder="Chi tiết, tài liệu tham khảo…"></textarea></div>
+      </div>
+      <div class="modal__foot"><button class="btn btn--secondary" onclick="sfCloseModal('modal-task')">Hủy</button><button class="btn btn--primary">Thêm nhiệm vụ</button></div>
+    </div>
+  </div>
+
+  <script src="css/app.js"></script>
+</body>
+</html>
