@@ -64,11 +64,11 @@ class SmokePageTests(TestCase):
         self.assertIn(reverse('calendar_sync:settings'), content)
 
     def test_sidebar_overlay_hidden_by_default(self):
-        """Mục 10: overlay không còn class sidebar-overlay ở trạng thái mặc định."""
+        """Backdrop của sidebar không ở trạng thái mở mặc định."""
         content = self.client.get('/').content.decode()
-        match = re.search(r'<div[^>]*id="sidebarOverlay"[^>]*>', content)
-        self.assertIsNotNone(match, 'không tìm thấy phần tử #sidebarOverlay')
-        self.assertNotIn('sidebar-overlay', match.group(0))
+        match = re.search(r'<div[^>]*id="sidebarBackdrop"[^>]*>', content)
+        self.assertIsNotNone(match, 'không tìm thấy phần tử #sidebarBackdrop')
+        self.assertNotIn('open', match.group(0))
 
 
 class TaskTests(TestCase):
@@ -357,7 +357,7 @@ class AIAssistantTests(TestCase):
     def test_ai_settings_hides_model_until_key_present(self):
         response = self.client.get(reverse('ai_assistant:settings'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'id="model-field" class="hidden"')
+        self.assertContains(response, 'id="model-field" class="field hidden"')
 
     def test_ai_settings_custom_requires_base_url_and_model(self):
         response = self.client.post(reverse('ai_assistant:settings'), {
