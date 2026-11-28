@@ -15,6 +15,7 @@
             <a class="btn btn--secondary btn--sm" href="{% url 'scheduler:busy_list' %}">Lịch bận</a>
             <a class="btn btn--secondary btn--sm" href="{% url 'calendar_sync:settings' %}">Google Calendar</a>
             <a class="btn btn--secondary btn--sm" href="{% url 'scheduler:block_create' %}">Thêm khung học</a>
+            <a class="btn btn--secondary btn--sm" href="{% url 'scheduler:export_ics' %}" title="Tải lịch học xuống dưới dạng tệp iCalendar (.ics)">Tải lịch xuống</a>
             <form method="post" action="{% url 'scheduler:auto_schedule' %}" data-loading-form>
                 {% csrf_token %}
                 <button class="btn btn--primary btn--sm" type="submit">Tự động sắp lịch tuần</button>
