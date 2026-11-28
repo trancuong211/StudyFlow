@@ -3,19 +3,71 @@
 {% block extra_css %}<script src="{% static 'vendor/fullcalendar.min.js' %}"></script>
 <script src="{% static 'vendor/fullcalendar-vi.min.js' %}"></script>
 <script src="{% static 'vendor/luxon.min.js' %}"></script>
-<script src="{% static 'vendor/fullcalendar-luxon.min.js' %}"></script>
-<style>.fc{font-family:Inter,sans-serif}.fc .fc-toolbar-title{font-size:1.15rem;font-weight:700}.fc .fc-button-primary{background:#2563eb;border-color:#2563eb}.fc-event{cursor:pointer;border-radius:5px}.fc .fc-timegrid-slot{height:2.2rem}.fc-event:focus{outline:3px solid #0f172a}.fc-scrollgrid{border-radius:10px;overflow:hidden}</style>{% endblock %}
-{% block content %}<div class="space-y-5">
-<div class="flex flex-wrap items-center justify-between gap-4"><div><h1 class="text-2xl font-bold">Lịch học cá nhân</h1><p class="text-sm text-slate-600 mt-1">Kế hoạch theo {{ user.timezone }} · tối đa {{ user.daily_study_goal_hours }} giờ học/ngày.</p></div>
-<div class="flex flex-wrap gap-2"><a class="sf-secondary" href="{% url 'scheduler:busy_list' %}">Lịch bận</a><a class="sf-secondary" href="{% url 'calendar_sync:settings' %}">Google Calendar</a><a class="sf-secondary" href="{% url 'scheduler:block_create' %}">Thêm khung học</a><form method="post" action="{% url 'scheduler:auto_schedule' %}" data-loading-form>{% csrf_token %}<button class="sf-button" type="submit">Tự động sắp lịch tuần</button></form></div></div>
-<p class="text-sm text-slate-600">Bấm khung học để sửa hoặc khóa. Kéo–thả sẽ tự khóa khung đã chỉnh. Lịch bận màu xám, sự kiện Google màu xanh lá.</p>
-<div id="calendar-status" class="hidden sf-error" role="alert"></div>
-{% if overloaded_days %}<section class="sf-error" role="alert"><h2 class="font-semibold">Kế hoạch được giữ lại đang vượt mục tiêu ngày</h2>{% for day in overloaded_days %}<p>{{ day.date|date:'d/m' }}: {{ day.minutes }} phút, vượt {{ day.extra }} phút. Hãy chỉnh khung thủ công/đã khóa nếu cần giảm tải.</p>{% endfor %}</section>{% endif %}
-<div class="sf-card"><div id="calendar"></div></div>
-{% if schedule_report %}<section class="sf-card space-y-3"><h2 class="text-lg font-semibold">Công việc chưa đủ lịch trước deadline</h2><p class="text-sm text-slate-600">Chạy lập lịch tuần, điều chỉnh lịch bận hoặc giảm phạm vi công việc nếu thời gian không đủ.</p>
-{% for item in schedule_report %}<div class="flex flex-wrap justify-between gap-2 border-t border-slate-100 pt-3"><div><a class="font-medium text-brand-700" href="{% url 'tasks:edit' item.task_id %}">{{ item.title }}</a><p class="text-sm text-slate-600">{{ item.reason }}</p></div><span class="text-sm font-semibold text-amber-800">Thiếu {{ item.missing_minutes }} phút</span></div>{% endfor %}</section>{% endif %}
+<script src="{% static 'vendor/fullcalendar-luxon.min.js' %}"></script>{% endblock %}
+{% block content %}
+<div class="page-stack">
+    <div class="page-head page-head--row">
+        <div>
+            <h1>Lịch học cá nhân</h1>
+            <p class="page-head__sub">Kế hoạch theo {{ user.timezone }} · tối đa {{ user.daily_study_goal_hours }} giờ học/ngày.</p>
+        </div>
+        <div class="page-head__actions">
+            <a class="btn btn--secondary btn--sm" href="{% url 'scheduler:busy_list' %}">Lịch bận</a>
+            <a class="btn btn--secondary btn--sm" href="{% url 'calendar_sync:settings' %}">Google Calendar</a>
+            <a class="btn btn--secondary btn--sm" href="{% url 'scheduler:block_create' %}">Thêm khung học</a>
+            <form method="post" action="{% url 'scheduler:auto_schedule' %}" data-loading-form>
+                {% csrf_token %}
+                <button class="btn btn--primary btn--sm" type="submit">Tự động sắp lịch tuần</button>
+            </form>
+        </div>
+    </div>
+
+    <p class="calendar-note">Bấm khung học để sửa hoặc khóa. Kéo–thả sẽ tự khóa khung đã chỉnh. Lịch bận màu xám, sự kiện Google màu xanh lá.</p>
+    <div id="calendar-status" class="alert alert--danger hidden" role="alert"></div>
+
+    {% if overloaded_days %}
+    <section class="alert alert--danger" role="alert">
+        <h2 class="alert__title">Kế hoạch được giữ lại đang vượt mục tiêu ngày</h2>
+        <div class="alert__list">
+            {% for day in overloaded_days %}
+            <p>{{ day.date|date:'d/m' }}: {{ day.minutes }} phút, vượt {{ day.extra }} phút. Hãy chỉnh khung thủ công/đã khóa nếu cần giảm tải.</p>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <div class="card calendar-card">
+        <div id="calendar"></div>
+    </div>
+
+    {% if schedule_report %}
+    <section class="card card--pad-lg stack">
+        <div>
+            <h2 class="section-title">Công việc chưa đủ lịch trước deadline</h2>
+            <p class="section-meta">Chạy lập lịch tuần, điều chỉnh lịch bận hoặc giảm phạm vi công việc nếu thời gian không đủ.</p>
+        </div>
+        {% for item in schedule_report %}
+        <div class="calendar-report-row">
+            <div>
+                <a class="calendar-report-row__title" href="{% url 'tasks:edit' item.task_id %}">{{ item.title }}</a>
+                <p class="calendar-report-row__reason">{{ item.reason }}</p>
+            </div>
+            <span class="calendar-report-row__missing">Thiếu {{ item.missing_minutes }} phút</span>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
 </div>
-<dialog id="event-dialog" class="rounded-2xl p-6 backdrop:bg-black/40" style="width:calc(100% - 2rem)"><h2 id="event-title" class="font-bold text-xl"></h2><p id="event-details" class="text-sm text-slate-600 my-4"></p><div class="flex flex-wrap gap-3"><a id="event-edit" class="sf-button">Chỉnh thời gian</a><button id="event-lock" class="sf-secondary">Khóa</button><button id="event-close" class="sf-secondary">Đóng</button></div></dialog>
+
+<dialog id="event-dialog" class="calendar-dialog">
+    <h2 id="event-title" class="calendar-dialog__title"></h2>
+    <p id="event-details" class="calendar-dialog__text"></p>
+    <div class="calendar-dialog__actions">
+        <a id="event-edit" class="btn btn--primary btn--sm">Chỉnh thời gian</a>
+        <button id="event-lock" class="btn btn--secondary btn--sm">Khóa</button>
+        <button id="event-close" class="btn btn--secondary btn--sm">Đóng</button>
+    </div>
+</dialog>
 {% endblock %}
 {% block extra_js %}<script>
 document.addEventListener('DOMContentLoaded', () => {

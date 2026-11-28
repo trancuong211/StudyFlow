@@ -3,97 +3,122 @@
 {% block title %}Danh Sách Task & Deadline – StudyFlow{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+<div class="page-stack">
+    <div class="page-head page-head--row">
         <div>
-            <p class="text-sm font-medium text-brand-600 mb-1">Quản lý công việc</p>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Nhiệm vụ & Deadline</h1>
-            <p class="text-sm text-slate-500 mt-1">Quản lý bài tập, đồ án, kỳ thi và mức độ ưu tiên.</p>
+            <p class="page-head__eyebrow">Quản lý công việc</p>
+            <h1>Nhiệm vụ & Deadline</h1>
+            <p class="page-head__sub">Quản lý bài tập, đồ án, kỳ thi và mức độ ưu tiên.</p>
         </div>
-        <a href="{% url 'tasks:create' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm shadow-sm transition-colors self-start sm:self-auto">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        <a href="{% url 'tasks:create' %}" class="btn btn--primary btn--sm">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             Thêm công việc
         </a>
     </div>
 
-    <!-- Filter Bar -->
-    <form method="get" class="sf-card flex flex-wrap gap-3 items-end">
-        <div class="flex-1 min-w-[160px]"><label for="task-query" class="sf-label">Tìm công việc</label><input id="task-query" name="q" value="{{ query }}" placeholder="Tên công việc"></div>
-        <div><label for="task-course" class="sf-label">Môn học</label><select name="course" id="task-course"><option value="">Tất cả môn</option>{% for course in courses %}<option value="{{ course.pk }}" {% if course_filter == course.pk|stringformat:'s' %}selected{% endif %}>{{ course.name }}</option>{% endfor %}</select></div>
-        <div><label for="task-priority" class="sf-label">Ưu tiên</label><select name="priority" id="task-priority"><option value="">Tất cả</option><option value="4" {% if priority_filter == '4' %}selected{% endif %}>Khẩn cấp</option><option value="3" {% if priority_filter == '3' %}selected{% endif %}>Cao</option><option value="2" {% if priority_filter == '2' %}selected{% endif %}>Trung bình</option><option value="1" {% if priority_filter == '1' %}selected{% endif %}>Thấp</option></select></div>
-        {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}<button class="sf-secondary">Lọc</button>
+    <form method="get" class="card filter-form">
+        <div class="field">
+            <label for="task-query" class="field__label">Tìm công việc</label>
+            <input id="task-query" name="q" value="{{ query }}" placeholder="Tên công việc" class="input">
+        </div>
+        <div class="field field--auto">
+            <label for="task-course" class="field__label">Môn học</label>
+            <select name="course" id="task-course" class="select">
+                <option value="">Tất cả môn</option>
+                {% for course in courses %}
+                <option value="{{ course.pk }}" {% if course_filter == course.pk|stringformat:'s' %}selected{% endif %}>{{ course.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field field--auto">
+            <label for="task-priority" class="field__label">Ưu tiên</label>
+            <select name="priority" id="task-priority" class="select">
+                <option value="">Tất cả</option>
+                <option value="4" {% if priority_filter == '4' %}selected{% endif %}>Khẩn cấp</option>
+                <option value="3" {% if priority_filter == '3' %}selected{% endif %}>Cao</option>
+                <option value="2" {% if priority_filter == '2' %}selected{% endif %}>Trung bình</option>
+                <option value="1" {% if priority_filter == '1' %}selected{% endif %}>Thấp</option>
+            </select>
+        </div>
+        {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+        <button class="btn btn--secondary" type="submit">Lọc</button>
     </form>
-    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-medium text-slate-500 mr-1">Trạng thái:</span>
-            <a href="{% url 'tasks:list' %}" class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors {% if not status_filter %}bg-slate-900 text-white border-slate-900{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">Tất cả</a>
-            <a href="{% url 'tasks:list' %}?status=TODO" class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors {% if status_filter == 'TODO' %}bg-brand-600 text-white border-brand-600{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">Cần làm</a>
-            <a href="{% url 'tasks:list' %}?status=IN_PROGRESS" class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors {% if status_filter == 'IN_PROGRESS' %}bg-amber-500 text-white border-amber-500{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">Đang làm</a>
-            <a href="{% url 'tasks:list' %}?status=COMPLETED" class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors {% if status_filter == 'COMPLETED' %}bg-emerald-600 text-white border-emerald-600{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">Đã xong</a>
+
+    <div class="card">
+        <div class="status-tabs">
+            <span class="status-tabs__label">Trạng thái:</span>
+            <a href="{% url 'tasks:list' %}" class="status-tab{% if not status_filter %} is-active{% endif %}">Tất cả</a>
+            <a href="{% url 'tasks:list' %}?status=TODO" class="status-tab{% if status_filter == 'TODO' %} is-active{% endif %}">Cần làm</a>
+            <a href="{% url 'tasks:list' %}?status=IN_PROGRESS" class="status-tab status-tab--progress{% if status_filter == 'IN_PROGRESS' %} is-active{% endif %}">Đang làm</a>
+            <a href="{% url 'tasks:list' %}?status=COMPLETED" class="status-tab status-tab--done{% if status_filter == 'COMPLETED' %} is-active{% endif %}">Đã xong</a>
         </div>
     </div>
 
-    <!-- Task List -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="card card--flush">
         {% for task in tasks %}
-        <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 transition-colors {% if not forloop.last %}border-b border-slate-100{% endif %}">
-            <div class="flex items-start gap-3.5">
-                <form method="post" action="{% url 'tasks:toggle_status' task.id %}" class="mt-0.5">
+        <div class="list-row">
+            <div class="list-row__main">
+                <form method="post" action="{% url 'tasks:toggle_status' task.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0
-                        {% if task.status == 'COMPLETED' %}bg-emerald-500 border-emerald-500 text-white{% else %}border-slate-300 hover:border-brand-500 hover:bg-brand-50{% endif %}"
+                    <button type="submit" class="task-check{% if task.status == 'COMPLETED' %} is-done{% endif %}"
                         aria-label="{% if task.status == 'COMPLETED' %}Đánh dấu chưa hoàn thành{% else %}Đánh dấu hoàn thành{% endif %}">
                         {% if task.status == 'COMPLETED' %}
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                         {% endif %}
                     </button>
                 </form>
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-medium text-slate-900 text-sm {% if task.status == 'COMPLETED' %}line-through text-slate-400{% endif %}">{{ task.title }}</span>
+
+                <div class="list-row__body">
+                    <div class="inline-group">
+                        <span class="list-row__title{% if task.status == 'COMPLETED' %} is-done{% endif %}">{{ task.title }}</span>
                         {% if task.course %}
-                        <span class="text-[11px] font-medium px-2 py-0.5 rounded text-white flex-shrink-0" style="background-color: {{ task.course.color }}">{{ task.course.name }}</span>
+                        <span class="course-badge" style="background-color: {{ task.course.color }}">{{ task.course.name }}</span>
                         {% endif %}
-                        <span class="text-[11px] font-medium px-2 py-0.5 rounded-md flex-shrink-0
-                            {% if task.priority == 4 %}bg-red-50 text-red-700 border border-red-200
-                            {% elif task.priority == 3 %}bg-amber-50 text-amber-700 border border-amber-200
-                            {% elif task.priority == 2 %}bg-blue-50 text-blue-700 border border-blue-200
-                            {% else %}bg-slate-100 text-slate-600 border border-slate-200{% endif %}">
-                            {{ task.get_priority_display }}
-                        </span>
+                        {% if task.priority == 4 %}
+                        <span class="badge badge--danger">{{ task.get_priority_display }}</span>
+                        {% elif task.priority == 3 %}
+                        <span class="badge badge--warning">{{ task.get_priority_display }}</span>
+                        {% elif task.priority == 2 %}
+                        <span class="badge badge--primary">{{ task.get_priority_display }}</span>
+                        {% else %}
+                        <span class="badge">{{ task.get_priority_display }}</span>
+                        {% endif %}
                     </div>
-                    <div class="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
-                        <span class="inline-flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span class="{% if task.is_overdue %}text-red-600 font-semibold{% else %}text-slate-500{% endif %}">{{ task.deadline|date:"H:i - d/m/Y" }}</span>
+                    <div class="list-row__meta">
+                        <span>
+                            <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="{% if task.is_overdue %}is-overdue{% else %}text-muted{% endif %}">{{ task.deadline|date:"H:i - d/m/Y" }}</span>
                         </span>
                         <span>{{ task.estimated_duration }} phút</span>
                         {% if task.status == 'COMPLETED' %}
-                        <span class="text-emerald-600">Đã hoàn thành</span>
+                        <span class="text-success">Đã hoàn thành</span>
                         {% elif task.is_scheduled %}
-                        <span class="inline-flex items-center gap-1 text-emerald-600"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Đã xếp lịch</span>
+                        <span class="text-success">
+                            <svg class="icon-xs" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                            Đã xếp lịch
+                        </span>
                         {% else %}
-                        <span class="inline-flex items-center gap-1 text-amber-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>Chưa xếp lịch</span>
+                        <span class="text-warning">
+                            <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Chưa xếp lịch
+                        </span>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
-                <a href="{% url 'tasks:edit' task.id %}" class="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Sửa</a>
-                <a href="{% url 'tasks:delete' task.id %}" class="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">Xóa</a>
+            <div class="list-row__actions">
+                <a href="{% url 'tasks:edit' task.id %}" class="btn btn--secondary btn--sm">Sửa</a>
+                <a href="{% url 'tasks:delete' task.id %}" class="btn btn--danger-ghost btn--sm">Xóa</a>
             </div>
         </div>
         {% empty %}
-        <div class="py-16 text-center">
-            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-            </div>
-            <p class="font-medium text-slate-700">Chưa có công việc nào</p>
-            <p class="text-sm text-slate-400 mt-1 mb-4">Tạo task đầu tiên để bắt đầu quản lý deadline.</p>
-            <a href="{% url 'tasks:create' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        <div class="empty">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            <p class="empty__title">Chưa có công việc nào</p>
+            <p class="empty__text">Tạo task đầu tiên để bắt đầu quản lý deadline.</p>
+            <a href="{% url 'tasks:create' %}" class="btn btn--primary btn--sm" style="margin-top:var(--sp-3);">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Thêm công việc
             </a>
         </div>

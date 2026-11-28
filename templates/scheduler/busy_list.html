@@ -3,47 +3,50 @@
 {% block title %}Lịch bận & ca làm – StudyFlow{% endblock %}
 
 {% block content %}
-    <div class="space-y-5">
-        <div class="flex flex-wrap justify-between gap-4 items-center">
-            <div>
-                <h1 class="text-2xl font-bold">Lịch bận & ca làm</h1>
-                <p class="text-slate-600 mt-1">Lịch lên lớp, làm thêm và hoạt động cá nhân sẽ được loại khỏi giờ học.</p>
-            </div>
-            <a class="sf-button" href="{% url 'scheduler:busy_create' %}">Thêm lịch bận</a>
-        </div>
-
-        {% for period in periods %}
-            <article class="sf-card flex flex-wrap justify-between gap-4">
-                <div>
-                    <h2 class="font-semibold">{{ period.title }}</h2>
-                    <p class="text-sm text-slate-600 mt-1">
-                        {{ period.start_time|date:'H:i d/m/Y' }} → {{ period.end_time|date:'H:i d/m/Y' }}
-                    </p>
-
-                    {% if period.repeats_weekly %}
-                        <p class="text-sm text-brand-700 mt-1">
-                            Lặp hằng tuần{% if period.repeat_until %} đến {{ period.repeat_until|date:'d/m/Y' }}{% endif %}
-                        </p>
-                    {% endif %}
-
-                    {% if period.notes %}
-                        <p class="text-sm text-slate-600 mt-2 whitespace-pre-line">{{ period.notes }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <a class="sf-secondary" href="{% url 'scheduler:busy_edit' period.pk %}">Sửa</a>
-                    <a class="text-red-700" href="{% url 'scheduler:busy_delete' period.pk %}">Xóa</a>
-                </div>
-            </article>
-        {% empty %}
-            <div class="sf-card">
-                Chưa có lịch bận. Thêm lịch lên lớp hoặc ca làm trước khi tự động sắp lịch.
-            </div>
-        {% endfor %}
-
+<div class="page-stack">
+    <div class="page-head page-head--row">
         <div>
-            <a class="sf-secondary inline-block" href="{% url 'scheduler:calendar' %}">Xem lịch học</a>
+            <h1>Lịch bận & ca làm</h1>
+            <p class="page-head__sub">Lịch lên lớp, làm thêm và hoạt động cá nhân sẽ được loại khỏi giờ học.</p>
         </div>
+        <a class="btn btn--primary btn--sm" href="{% url 'scheduler:busy_create' %}">Thêm lịch bận</a>
     </div>
+
+    <div class="busy-list">
+        {% for period in periods %}
+        <article class="card busy-card">
+            <div>
+                <h2 class="section-title">{{ period.title }}</h2>
+                <p class="busy-card__meta">{{ period.start_time|date:'H:i d/m/Y' }} → {{ period.end_time|date:'H:i d/m/Y' }}</p>
+
+                {% if period.repeats_weekly %}
+                <p class="busy-card__repeat">
+                    Lặp hằng tuần{% if period.repeat_until %} đến {{ period.repeat_until|date:'d/m/Y' }}{% endif %}
+                </p>
+                {% endif %}
+
+                {% if period.notes %}
+                <p class="busy-card__notes">{{ period.notes }}</p>
+                {% endif %}
+            </div>
+
+            <div class="busy-card__actions">
+                <a class="btn btn--secondary btn--sm" href="{% url 'scheduler:busy_edit' period.pk %}">Sửa</a>
+                <a class="link-danger" href="{% url 'scheduler:busy_delete' period.pk %}">Xóa</a>
+            </div>
+        </article>
+        {% empty %}
+        <div class="card card--pad-lg empty">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+            <p class="empty__title">Chưa có lịch bận</p>
+            <p class="empty__text">Thêm lịch lên lớp hoặc ca làm trước khi tự động sắp lịch.</p>
+            <a class="btn btn--primary btn--sm" href="{% url 'scheduler:busy_create' %}" style="margin-top:var(--sp-3);">Thêm lịch bận</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div>
+        <a class="btn btn--secondary btn--sm" href="{% url 'scheduler:calendar' %}">Xem lịch học</a>
+    </div>
+</div>
 {% endblock %}

@@ -3,14 +3,21 @@
 {% block title %}Xác nhận xóa – StudyFlow{% endblock %}
 
 {% block content %}
-    <div class="sf-card w-full space-y-5">
-        <h1 class="text-2xl font-bold">Xác nhận xóa</h1>
-        <p>Bạn muốn xóa <strong>{{ item }}</strong>? Thao tác này không thể hoàn tác.</p>
-
-        <form method="post" class="flex gap-3">
-            {% csrf_token %}
-            <button class="sf-button sf-danger" type="submit">Xóa</button>
-            <a class="sf-secondary" href="{% url back_url %}">Hủy</a>
-        </form>
+<div class="confirm-card card">
+    <div class="confirm-card__head">
+        <div class="confirm-card__icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </div>
+        <h1 class="confirm-card__title">Xác nhận xóa</h1>
+        <p class="confirm-card__text">Bạn muốn xóa <strong>{{ item }}</strong>? Thao tác này không thể hoàn tác.</p>
     </div>
+
+    <div class="confirm-card__actions">
+        <form method="post">
+            {% csrf_token %}
+            <button class="btn btn--danger" type="submit">Xóa</button>
+        </form>
+        <a class="btn btn--secondary" href="{% url back_url %}">Hủy</a>
+    </div>
+</div>
 {% endblock %}

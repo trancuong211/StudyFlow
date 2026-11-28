@@ -3,41 +3,44 @@
 {% block title %}{{ title }} – StudyFlow{% endblock %}
 
 {% block content %}
-    <div class="w-full space-y-5">
-        <div>
-            <a class="text-brand-700 text-sm inline-block mb-2" href="{% url back_url %}">← Quay lại</a>
-            <h1 class="text-2xl font-bold">{{ title }}</h1>
+<div class="page-stack">
+    <div>
+        <a class="back-link" href="{% url back_url %}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            Quay lại
+        </a>
+        <div class="page-head">
+            <h1>{{ title }}</h1>
         </div>
-
-        <form method="post" {% if multipart %}enctype="multipart/form-data"{% endif %} class="sf-card space-y-5" data-loading-form>
-            {% csrf_token %}
-
-            {% if form.non_field_errors %}
-                <div class="sf-error" role="alert">{{ form.non_field_errors }}</div>
-            {% endif %}
-
-            {% for field in form %}
-                <div>
-                    <label for="{{ field.id_for_label }}" class="sf-label">
-                        {{ field.label }}{% if field.field.required %} *{% endif %}
-                    </label>
-                    {{ field }}
-                    {% if field.help_text %}
-                        <p class="text-sm text-slate-600 mt-1">{{ field.help_text }}</p>
-                    {% endif %}
-                    {% if field.errors %}
-                        <div class="sf-error mt-1" role="alert">{{ field.errors }}</div>
-                    {% endif %}
-                </div>
-            {% endfor %}
-
-            <div class="flex flex-wrap gap-3 items-center pt-3">
-                <button class="sf-button" type="submit">Lưu thay đổi</button>
-                <a class="sf-secondary" href="{% url back_url %}">Hủy</a>
-                {% if delete_url %}
-                    <a class="text-red-700 text-sm ml-auto" href="{{ delete_url }}">Xóa khung học</a>
-                {% endif %}
-            </div>
-        </form>
     </div>
+
+    <form method="post" {% if multipart %}enctype="multipart/form-data"{% endif %} class="card card--pad-lg form" data-loading-form>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert--danger" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+        <div class="field{% if field.errors %} has-error{% endif %}">
+            <label class="field__label" for="{{ field.id_for_label }}">
+                {{ field.label }}{% if field.field.required %} <span class="req">*</span>{% endif %}
+            </label>
+            {{ field }}
+            {% if field.help_text %}
+            <p class="field__hint">{{ field.help_text|safe }}</p>
+            {% endif %}
+            {% if field.errors %}<div class="field__error">{{ field.errors }}</div>{% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button class="btn btn--primary" type="submit">Lưu thay đổi</button>
+            <a class="btn btn--secondary" href="{% url back_url %}">Hủy</a>
+            {% if delete_url %}
+            <a class="link-danger push-right" href="{{ delete_url }}">Xóa khung học</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
 {% endblock %}

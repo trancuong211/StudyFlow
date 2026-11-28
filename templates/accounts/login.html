@@ -1,28 +1,50 @@
 {% extends 'base.html' %}
 
 {% block title %}Đăng Nhập – StudyFlow{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block content_class %}content--auth{% endblock %}
 
 {% block content %}
-<div class="min-h-[calc(100vh-8rem)] flex items-center justify-center">
-    <div class="w-full">
-        <!-- Logo & Heading -->
-        <div class="text-center mb-8">
-            <a href="/" class="inline-flex items-center gap-2 mb-6">
-                <span class="text-3xl font-extrabold bg-gradient-to-r from-brand-600 to-indigo-600 bg-clip-text text-transparent">StudyFlow</span>
-            </a>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Chào mừng trở lại</h1>
-            <p class="text-sm text-slate-500 mt-1.5">Đăng nhập để xem lịch học tập và tối ưu thời gian của bạn.</p>
+<div class="auth-shell">
+    <aside class="auth-aside">
+        <div class="auth-aside__brand">
+            <div class="sidebar__logo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.42 10.92 12 5 2.58 10.92 12 16.84l9.42-5.92Z"/><path d="M12 16.84V22"/><path d="m5 13.5 7 4.5 7-4.5"/></svg>
+            </div>
+            <div>
+                <div class="sidebar__name">StudyFlow</div>
+            </div>
         </div>
 
-        <!-- Form Card -->
-        <div class="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm">
-            <form method="post" class="space-y-4">
-                {% csrf_token %}
-                {% if form.non_field_errors %}<div class="sf-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-                <input type="hidden" name="next" value="{{ next }}">
+        <div>
+            <div class="auth-aside__quote">"Kế hoạch tốt hôm nay sẽ nhẹ nhàng hơn cho ngày mai."</div>
+            <div class="auth-aside__quote-attr">— Một sinh viên đã hoàn thành đúng hạn</div>
+        </div>
 
-                <div>
-                    <label for="id_username" class="block text-sm font-medium text-slate-700 mb-1.5">Tên đăng nhập hoặc Email</label>
+        <div class="auth-aside__footer">StudyFlow · Lập kế hoạch học tập cá nhân</div>
+    </aside>
+
+    <main class="auth-main">
+        <div class="auth-form">
+            <div class="auth-form__head">
+                <h1>Đăng nhập</h1>
+                <p>Chào mừng bạn quay lại StudyFlow.</p>
+            </div>
+
+            <div class="auth-tabs">
+                <div class="auth-tab active">Đăng nhập</div>
+                <a href="{% url 'accounts:register' %}" class="auth-tab" style="text-decoration:none;">Đăng ký</a>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}">
+                {% if form.non_field_errors %}
+                <div class="sf-error" role="alert">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="field{% if form.username.errors %} has-error{% endif %}">
+                    <label class="field__label" for="id_username">Tên đăng nhập hoặc Email <span class="req">*</span></label>
                     <input
                         type="text"
                         name="username"
@@ -32,12 +54,13 @@
                         autofocus
                         autocomplete="username"
                         placeholder="Nhập tên đăng nhập..."
-                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-colors"
+                        class="input"
                     >
+                    {% if form.username.errors %}<div class="field__error">{{ form.username.errors.0 }}</div>{% endif %}
                 </div>
 
-                <div>
-                    <label for="id_password" class="block text-sm font-medium text-slate-700 mb-1.5">Mật khẩu</label>
+                <div class="field{% if form.password.errors %} has-error{% endif %}">
+                    <label class="field__label" for="id_password">Mật khẩu <span class="req">*</span></label>
                     <input
                         type="password"
                         name="password"
@@ -45,21 +68,25 @@
                         required
                         autocomplete="current-password"
                         placeholder="Nhập mật khẩu..."
-                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-colors"
+                        class="input"
                     >
+                    {% if form.password.errors %}<div class="field__error">{{ form.password.errors.0 }}</div>{% endif %}
+                    <div class="field__hint" style="display:flex; justify-content:space-between; gap:var(--sp-2); margin-top:var(--sp-1);">
+                        <span>Tối thiểu 8 ký tự</span>
+                        <a class="auth-link" href="{% url 'accounts:password_reset' %}">Quên mật khẩu?</a>
+                    </div>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-sm transition-colors">
+                <button type="submit" class="btn btn--primary">
                     Đăng nhập
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </button>
             </form>
-            <a class="block text-sm text-brand-700 mt-4" href="{% url 'accounts:password_reset' %}">Quên mật khẩu?</a>
 
-            <div class="mt-5 pt-5 border-t border-slate-100 text-center text-sm text-slate-500">
-                Chưa có tài khoản?
-                <a href="{% url 'accounts:register' %}" class="font-semibold text-brand-600 hover:text-brand-700 transition-colors">Đăng ký ngay</a>
-            </div>
+            <p class="auth-footer">
+                Chưa có tài khoản? <a class="auth-link" href="{% url 'accounts:register' %}">Đăng ký ngay</a>
+            </p>
         </div>
-    </div>
+    </main>
 </div>
 {% endblock %}
