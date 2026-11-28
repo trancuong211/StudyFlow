@@ -49,7 +49,7 @@
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>
             <p class="empty__title">Chưa có tài liệu phù hợp</p>
             <p class="empty__text">Thêm file hoặc link để bắt đầu ôn tập.</p>
-            <a class="btn btn--primary btn--sm" href="{% url 'resources:create' %}" style="margin-top:var(--sp-3);">Thêm tài liệu</a>
+            <a class="btn btn--primary btn--sm empty__action" href="{% url 'resources:create' %}">Thêm tài liệu</a>
         </div>
         {% endfor %}
     </div>

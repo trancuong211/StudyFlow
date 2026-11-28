@@ -87,7 +87,9 @@
 
         <aside class="stack">
             <div class="card">
-                <h2 class="card__title" style="margin-bottom:var(--sp-3);">Trạng thái hiện tại</h2>
+                <div class="card__head">
+                    <h2 class="card__title">Trạng thái hiện tại</h2>
+                </div>
                 <dl class="status-list">
                     <div class="status-row">
                         <dt class="status-row__label">Nhà cung cấp</dt>
@@ -113,8 +115,10 @@
             </div>
 
             <div class="card">
-                <h2 class="card__title" style="margin-bottom:var(--sp-2);">Gợi ý dịch vụ có model miễn phí</h2>
-                <p class="section-meta" style="margin-bottom:var(--sp-3);">Bấm để điền nhanh Base URL (sau đó nhập API key của dịch vụ đó).</p>
+                <div class="provider-options__intro">
+                    <h2 class="card__title">Gợi ý dịch vụ có model miễn phí</h2>
+                    <p class="section-meta">Bấm để điền nhanh Base URL (sau đó nhập API key của dịch vụ đó).</p>
+                </div>
                 <div class="provider-options">
                     <button type="button" class="provider-option free-provider-btn" data-base-url="https://openrouter.ai/api/v1">
                         <span class="provider-option__name">OpenRouter</span>
