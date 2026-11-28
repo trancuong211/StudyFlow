@@ -3,89 +3,90 @@
 {% block title %}{{ title }} – StudyFlow{% endblock %}
 
 {% block content %}
-<div class="w-full">
-    <!-- Header -->
-    <div class="mb-6">
-        <a href="{% url 'courses:list' %}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-3">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+<div class="page-stack">
+    <div>
+        <a href="{% url 'courses:list' %}" class="back-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
             Quay lại danh sách
         </a>
-        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">{{ title }}</h1>
-        <p class="text-sm text-slate-500 mt-1">Thông tin môn học giúp phân loại và biểu diễn màu sắc trên lịch.</p>
+        <div class="page-head">
+            <h1>{{ title }}</h1>
+            <p class="page-head__sub">Thông tin môn học giúp phân loại và biểu diễn màu sắc trên lịch.</p>
+        </div>
     </div>
 
-    <!-- Form Card -->
-    <div class="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
-        <form method="post" class="space-y-5">
+    <div class="card card--pad-lg">
+        <form method="post" class="form">
             {% csrf_token %}
-            {% if form.errors %}<div class="sf-error" role="alert">{{ form.non_field_errors }}{% for field in form %}{% for error in field.errors %}<p>{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
 
-            <div>
-                <label for="id_name" class="block text-sm font-medium text-slate-700 mb-1.5">Tên môn học</label>
+            {% if form.errors %}
+            <div class="alert alert--danger" role="alert">
+                <p class="alert__title">Chưa lưu được, vui lòng kiểm tra:</p>
+                <ul class="alert__list">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="field{% if form.name.errors %} has-error{% endif %}">
+                <label for="id_name" class="field__label">Tên môn học <span class="req">*</span></label>
                 {{ form.name }}
+                {% if form.name.errors %}<div class="field__error">{{ form.name.errors }}</div>{% endif %}
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="id_code" class="block text-sm font-medium text-slate-700 mb-1.5">Mã môn học</label>
+            <div class="form-grid">
+                <div class="field{% if form.code.errors %} has-error{% endif %}">
+                    <label for="id_code" class="field__label">Mã môn học</label>
                     {{ form.code }}
+                    {% if form.code.errors %}<div class="field__error">{{ form.code.errors }}</div>{% endif %}
                 </div>
-                <div>
-                    <label for="id_color" class="block text-sm font-medium text-slate-700 mb-1.5">Màu đại diện</label>
+                <div class="field{% if form.color.errors %} has-error{% endif %}">
+                    <label for="id_color" class="field__label">Màu đại diện</label>
                     {{ form.color }}
+                    {% if form.color.errors %}<div class="field__error">{{ form.color.errors }}</div>{% endif %}
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="id_credits" class="block text-sm font-medium text-slate-700 mb-1.5">Số tín chỉ</label>
+            <div class="form-grid">
+                <div class="field{% if form.credits.errors %} has-error{% endif %}">
+                    <label for="id_credits" class="field__label">Số tín chỉ</label>
                     {{ form.credits }}
+                    {% if form.credits.errors %}<div class="field__error">{{ form.credits.errors }}</div>{% endif %}
                 </div>
-                <div>
-                    <label for="id_semester" class="block text-sm font-medium text-slate-700 mb-1.5">Học kỳ</label>
+                <div class="field{% if form.semester.errors %} has-error{% endif %}">
+                    <label for="id_semester" class="field__label">Học kỳ</label>
                     {{ form.semester }}
+                    {% if form.semester.errors %}<div class="field__error">{{ form.semester.errors }}</div>{% endif %}
                 </div>
             </div>
 
-            <div>
-                <label for="id_instructor" class="block text-sm font-medium text-slate-700 mb-1.5">Giảng viên phụ trách</label>
+            <div class="field{% if form.instructor.errors %} has-error{% endif %}">
+                <label for="id_instructor" class="field__label">Giảng viên phụ trách</label>
                 {{ form.instructor }}
+                {% if form.instructor.errors %}<div class="field__error">{{ form.instructor.errors }}</div>{% endif %}
             </div>
 
-            <div>
-                <label for="id_description" class="block text-sm font-medium text-slate-700 mb-1.5">Mô tả / Ghi chú</label>
+            <div class="field{% if form.description.errors %} has-error{% endif %}">
+                <label for="id_description" class="field__label">Mô tả / Ghi chú</label>
                 {{ form.description }}
+                {% if form.description.errors %}<div class="field__error">{{ form.description.errors }}</div>{% endif %}
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <label for="id_is_active" class="mr-auto text-sm">{{ form.is_active }} Đang học</label>
-                <a href="{% url 'courses:list' %}" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors">Hủy</a>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium shadow-sm transition-colors">Lưu môn học</button>
+            <div class="form-actions form-actions--between">
+                <label for="id_is_active" class="checkbox-field">{{ form.is_active }} Đang học</label>
+                <div class="page-head__actions">
+                    <a href="{% url 'courses:list' %}" class="btn btn--secondary">Hủy</a>
+                    <button type="submit" class="btn btn--primary">Lưu môn học</button>
+                </div>
             </div>
         </form>
     </div>
 </div>
-
-<style>
-    input[type="text"], input[type="number"], select, textarea {
-        width: 100%;
-        border-radius: 0.75rem;
-        border: 1px solid #e2e8f0;
-        padding: 0.625rem 0.875rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        color: #1e293b;
-        background-color: #fff;
-        transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    input::placeholder, textarea::placeholder { color: #94a3b8; }
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    textarea { min-height: 80px; resize: vertical; }
-    select { appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
-    input[type="color"] { padding: 0.25rem; height: 2.625rem; cursor: pointer; }
-</style>
 {% endblock %}

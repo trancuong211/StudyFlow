@@ -1,139 +1,104 @@
-<aside
-    id="sidebar"
-    class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out"
-    aria-label="Menu điều hướng chính"
->
-    <div class="flex-1 flex flex-col overflow-y-auto scrollbar-thin p-4">
-        <!-- Navigation Sections -->
-        <nav class="flex-1 space-y-6" aria-label="Điều hướng chính">
-            <!-- Quản lý chung -->
-            <div>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 px-2">Quản lý chung</p>
-                <ul class="space-y-1" role="list">
-                    <li>
-                        <a
-                            href="{% url 'dashboard:index' %}"
-                            class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if request.resolver_match.app_name == 'dashboard' %}bg-brand-50 text-brand-700 font-semibold{% endif %}"
-                            aria-current="{% if request.resolver_match.app_name == 'dashboard' %}page{% endif %}"
-                        >
-                            <span class="w-5 h-5 flex-shrink-0" aria-hidden="true">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                            </span>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{% url 'scheduler:calendar' %}"
-                            class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if request.resolver_match.app_name == 'scheduler' %}bg-brand-50 text-brand-700 font-semibold{% endif %}"
-                            aria-current="{% if request.resolver_match.app_name == 'scheduler' %}page{% endif %}"
-                        >
-                            <span class="w-5 h-5 flex-shrink-0" aria-hidden="true">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            </span>
-                            <span>Lịch học & Tối ưu</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{% url 'tasks:list' %}"
-                            class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if request.resolver_match.app_name == 'tasks' %}bg-brand-50 text-brand-700 font-semibold{% endif %}"
-                            aria-current="{% if request.resolver_match.app_name == 'tasks' %}page{% endif %}"
-                        >
-                            <span class="w-5 h-5 flex-shrink-0" aria-hidden="true">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                            </span>
-                            <span>Task & Deadline</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{% url 'courses:list' %}"
-                            class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if request.resolver_match.app_name == 'courses' %}bg-brand-50 text-brand-700 font-semibold{% endif %}"
-                            aria-current="{% if request.resolver_match.app_name == 'courses' %}page{% endif %}"
-                        >
-                            <span class="w-5 h-5 flex-shrink-0" aria-hidden="true">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                            </span>
-                            <span>Môn học</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+<aside id="sidebar" class="sidebar" aria-label="Menu điều hướng chính">
+    <a href="{% url 'dashboard:index' %}" class="sidebar__brand" aria-label="StudyFlow - Trang chủ">
+        <span class="sidebar__logo" aria-hidden="true">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M22 10 12 5 2 10l10 5 10-5Z"/>
+                <path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/>
+            </svg>
+        </span>
+        <span>
+            <span class="sidebar__name">StudyFlow</span>
+            <span class="sidebar__tag">Học tập thông minh</span>
+        </span>
+    </a>
 
-            <!-- Công cụ năng suất -->
-            <div class="space-y-1">
-                <a class="nav-link flex gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 {% if 'busy' in request.resolver_match.url_name %}bg-brand-50 text-brand-700{% endif %}" href="{% url 'scheduler:busy_list' %}"><svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-width="1.7" d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/></svg>Lịch bận & ca làm</a>
-                <a class="nav-link flex gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 {% if request.resolver_match.app_name == 'resources' %}bg-brand-50 text-brand-700{% endif %}" href="{% url 'resources:list' %}"><svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-width="1.7" d="M6 3h8l4 4v14H6V3Zm8 0v5h4M9 12h6m-6 4h6"/></svg>Tài liệu ôn tập</a>
-                <a class="nav-link flex gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 {% if request.resolver_match.app_name == 'notifications' %}bg-brand-50 text-brand-700{% endif %}" href="{% url 'notifications:list' %}"><svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-width="1.7" d="M12 3a6 6 0 0 0-6 6v6l-2 3h16l-2-3V9a6 6 0 0 0-6-6Zm-2 18h4"/></svg>Nhắc việc</a>
-                {% if user.is_staff %}<a class="nav-link flex px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50" href="{% url 'admin:index' %}">Quản trị</a>{% endif %}
-            </div>
-            <div>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 px-2">Công cụ năng suất</p>
-                <ul class="space-y-1" role="list">
-                    <li>
-                        <a
-                            href="{% url 'pomodoro:timer' %}"
-                            class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if request.resolver_match.app_name == 'pomodoro' %}bg-brand-50 text-brand-700 font-semibold{% endif %}"
-                            aria-current="{% if request.resolver_match.app_name == 'pomodoro' %}page{% endif %}"
-                        >
-                            <span class="w-5 h-5 flex-shrink-0" aria-hidden="true">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </span>
-                            <span>Pomodoro Timer</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{% url 'ai_assistant:insights' %}"
-                            class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name != 'settings' %}bg-brand-50 text-brand-700 font-semibold{% endif %}"
-                            aria-current="{% if request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name != 'settings' %}page{% endif %}"
-                        >
-                            <span class="w-5 h-5 flex-shrink-0" aria-hidden="true">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.734-.988-2.386l-.548-.547z"></path></svg>
-                            </span>
-                            <span>AI Trợ lý phân tích</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{% url 'ai_assistant:settings' %}"
-                            class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name == 'settings' %}bg-brand-50 text-brand-700 font-semibold{% endif %}"
-                            aria-current="{% if request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name == 'settings' %}page{% endif %}"
-                        >
-                            <span class="w-5 h-5 flex-shrink-0" aria-hidden="true">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            </span>
-                            <span>Cài đặt AI</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{% url 'calendar_sync:connect' %}"
-                            href="{% url 'calendar_sync:settings' %}"
-                            class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                        >
-                            <span class="w-5 h-5 flex-shrink-0" aria-hidden="true">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            </span>
-                            <span>Đồng bộ Google Calendar</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+    <nav class="sidebar__nav" aria-label="Điều hướng chính">
+        <p class="sidebar__section-label">Học tập</p>
 
-        <!-- Footer -->
-        <div class="border-t border-slate-200 pt-4 px-2">
-            <div class="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-slate-900 truncate">StudyFlow</p>
-                    <p class="text-[11px] text-slate-400">v1.0 • AI Productivity</p>
-                </div>
-            </div>
-        </div>
+        <a href="{% url 'dashboard:index' %}" class="nav-item{% if request.resolver_match.app_name == 'dashboard' %} active{% endif %}" {% if request.resolver_match.app_name == 'dashboard' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <span>Tổng quan</span>
+        </a>
+
+        <a href="{% url 'tasks:list' %}" class="nav-item{% if request.resolver_match.app_name == 'tasks' %} active{% endif %}" {% if request.resolver_match.app_name == 'tasks' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>
+            <span>Nhiệm vụ & deadline</span>
+        </a>
+
+        <a href="{% url 'scheduler:calendar' %}" class="nav-item{% if request.resolver_match.app_name == 'scheduler' and request.resolver_match.url_name == 'calendar' %} active{% endif %}" {% if request.resolver_match.app_name == 'scheduler' and request.resolver_match.url_name == 'calendar' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+            <span>Lịch học & tối ưu</span>
+        </a>
+
+        <a href="{% url 'courses:list' %}" class="nav-item{% if request.resolver_match.app_name == 'courses' %} active{% endif %}" {% if request.resolver_match.app_name == 'courses' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+            <span>Môn học</span>
+        </a>
+
+        <p class="sidebar__section-label">Công cụ</p>
+
+        <a href="{% url 'scheduler:busy_list' %}" class="nav-item{% if request.resolver_match.app_name == 'scheduler' and request.resolver_match.url_name != 'calendar' %} active{% endif %}" {% if request.resolver_match.app_name == 'scheduler' and request.resolver_match.url_name != 'calendar' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span>Lịch bận & ca làm</span>
+        </a>
+
+        <a href="{% url 'resources:list' %}" class="nav-item{% if request.resolver_match.app_name == 'resources' %} active{% endif %}" {% if request.resolver_match.app_name == 'resources' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+            <span>Tài liệu ôn tập</span>
+        </a>
+
+        <a href="{% url 'notifications:list' %}" class="nav-item{% if request.resolver_match.app_name == 'notifications' %} active{% endif %}" {% if request.resolver_match.app_name == 'notifications' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+            <span>Nhắc việc</span>
+        </a>
+
+        <a href="{% url 'pomodoro:timer' %}" class="nav-item{% if request.resolver_match.app_name == 'pomodoro' %} active{% endif %}" {% if request.resolver_match.app_name == 'pomodoro' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4"/><path d="M12 14l3-3"/><circle cx="12" cy="14" r="8"/></svg>
+            <span>Pomodoro</span>
+        </a>
+
+        <a href="{% url 'ai_assistant:insights' %}" class="nav-item{% if request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name != 'settings' and request.resolver_match.url_name != 'models' %} active{% endif %}" {% if request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name != 'settings' and request.resolver_match.url_name != 'models' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+            <span>AI phân tích</span>
+        </a>
+
+        <a href="{% url 'ai_assistant:settings' %}" class="nav-item{% if request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name == 'settings' or request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name == 'models' %} active{% endif %}" {% if request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name == 'settings' or request.resolver_match.app_name == 'ai_assistant' and request.resolver_match.url_name == 'models' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Cài đặt AI</span>
+        </a>
+
+        <a href="{% url 'calendar_sync:settings' %}" class="nav-item{% if request.resolver_match.app_name == 'calendar_sync' %} active{% endif %}" {% if request.resolver_match.app_name == 'calendar_sync' %}aria-current="page"{% endif %}>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+            <span>Đồng bộ Google Calendar</span>
+        </a>
+
+        {% if user.is_staff %}
+        <a href="{% url 'admin:index' %}" class="nav-item">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+            <span>Quản trị</span>
+        </a>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar__footer">
+        <a href="{% url 'accounts:profile' %}" class="sidebar__user" aria-label="Mở hồ sơ cá nhân">
+            <span class="avatar avatar--sm" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
+            <span class="sidebar__user-meta">
+                <span class="sidebar__user-name">{{ user.get_full_name|default:user.username }}</span>
+                <span class="sidebar__user-role">Tài khoản</span>
+            </span>
+        </a>
+
+        <button type="button" class="theme-toggle btn--icon" data-theme-toggle aria-label="Chuyển sang giao diện tối" aria-pressed="false">
+            <svg class="theme-icon theme-icon--moon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            <svg class="theme-icon theme-icon--sun" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        </button>
+
+        <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="theme-toggle btn--icon" aria-label="Đăng xuất" title="Đăng xuất">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            </button>
+        </form>
     </div>
 </aside>

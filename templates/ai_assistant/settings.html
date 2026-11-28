@@ -3,176 +3,151 @@
 {% block title %}Cài Đặt AI – StudyFlow{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+<div class="page-stack">
+    <div class="page-head page-head--row">
         <div>
-            <p class="text-sm font-medium text-brand-600 mb-1">Trợ lý thông minh</p>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Cài đặt AI</h1>
-            <p class="text-sm text-slate-500 mt-1">Dùng API key và model riêng của bạn để chạy phân tích.</p>
+            <p class="page-head__eyebrow">Trợ lý thông minh</p>
+            <h1>Cài đặt AI</h1>
+            <p class="page-head__sub">Dùng API key và model riêng của bạn để chạy phân tích.</p>
         </div>
-        <a href="{% url 'ai_assistant:insights' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-sm transition-colors self-start sm:self-auto">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <a href="{% url 'ai_assistant:insights' %}" class="btn btn--secondary btn--sm">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Quay lại phân tích
         </a>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Form -->
-        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
-            <form method="post" class="space-y-5">
+    <div class="grid-sidebar">
+        <div class="card card--pad-lg">
+            <form method="post" class="form">
                 {% csrf_token %}
 
                 {% if form.non_field_errors %}
-                <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
-                    {{ form.non_field_errors }}
-                </div>
+                <div class="alert alert--danger" role="alert">{{ form.non_field_errors }}</div>
                 {% endif %}
 
-                <div>
-                    <label for="{{ form.provider.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1.5">{{ form.provider.label }}</label>
+                <div class="field{% if form.provider.errors %} has-error{% endif %}">
+                    <label for="{{ form.provider.id_for_label }}" class="field__label">{{ form.provider.label }}</label>
                     {{ form.provider }}
-                    <p class="text-xs text-slate-400 mt-1.5">OpenAI và Claude không có model miễn phí. Chọn <strong>OpenAI-compatible</strong> + Base URL bên dưới để dùng dịch vụ có model free (OpenRouter, Gemini, Groq...).</p>
-                    {% for error in form.provider.errors %}<p class="text-xs text-red-600 mt-1.5">{{ error }}</p>{% endfor %}
+                    <p class="field__hint">OpenAI và Claude không có model miễn phí. Chọn <strong>OpenAI-compatible</strong> + Base URL bên dưới để dùng dịch vụ có model free (OpenRouter, Gemini, Groq...).</p>
+                    {% if form.provider.errors %}<div class="field__error">{{ form.provider.errors }}</div>{% endif %}
                 </div>
 
-                <div>
-                    <label for="{{ form.base_url.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1.5">{{ form.base_url.label }}</label>
+                <div class="field{% if form.base_url.errors %} has-error{% endif %}">
+                    <label for="{{ form.base_url.id_for_label }}" class="field__label">{{ form.base_url.label }}</label>
                     {{ form.base_url }}
-                    <p class="text-xs text-slate-400 mt-1.5">{{ form.base_url.help_text }}</p>
-                    {% for error in form.base_url.errors %}<p class="text-xs text-red-600 mt-1.5">{{ error }}</p>{% endfor %}
+                    {% if form.base_url.help_text %}<p class="field__hint">{{ form.base_url.help_text }}</p>{% endif %}
+                    {% if form.base_url.errors %}<div class="field__error">{{ form.base_url.errors }}</div>{% endif %}
                 </div>
 
-                <div>
-                    <label for="{{ form.api_key.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1.5">{{ form.api_key.label }}</label>
+                <div class="field{% if form.api_key.errors %} has-error{% endif %}">
+                    <label for="{{ form.api_key.id_for_label }}" class="field__label">{{ form.api_key.label }}</label>
                     {{ form.api_key }}
-                    <p class="text-xs text-slate-400 mt-1.5">{{ form.api_key.help_text }}</p>
-                    {% for error in form.api_key.errors %}<p class="text-xs text-red-600 mt-1.5">{{ error }}</p>{% endfor %}
+                    {% if form.api_key.help_text %}<p class="field__hint">{{ form.api_key.help_text }}</p>{% endif %}
+                    {% if form.api_key.errors %}<div class="field__error">{{ form.api_key.errors }}</div>{% endif %}
                 </div>
 
-                <div id="model-field" class="{% if not config.has_api_key %}hidden{% endif %}">
-                    <label for="model-select" class="block text-sm font-medium text-slate-700 mb-1.5">Model</label>
-                    <select id="model-select" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-colors">
+                <div id="model-field" class="field{% if not config.has_api_key %} hidden{% endif %}">
+                    <label for="model-select" class="field__label">Model</label>
+                    <select id="model-select" class="select">
                         <option value="">Chọn model...</option>
                     </select>
                     {{ form.model_name }}
-                    <p id="model-status" class="text-xs text-slate-400 mt-1.5">
+                    <p id="model-status" class="field__hint">
                         {% if config.has_api_key %}Đang tải danh sách model...{% else %}Nhập API key để tải danh sách model.{% endif %}
                     </p>
-                    <p id="model-free-hint" class="hidden text-xs text-amber-600 mt-1.5"></p>
-                    <div class="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
-                        <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Miễn phí</span>
-                        <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Trả phí</span>
-                        <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-400"></span> Không rõ</span>
+                    <p id="model-free-hint" class="field__hint hidden"></p>
+                    <div class="model-legend">
+                        <span class="model-legend__item"><span class="model-legend__dot model-legend__dot--free"></span> Miễn phí</span>
+                        <span class="model-legend__item"><span class="model-legend__dot model-legend__dot--paid"></span> Trả phí</span>
+                        <span class="model-legend__item"><span class="model-legend__dot"></span> Không rõ</span>
                     </div>
-                    <button type="button" id="model-manual-toggle" class="mt-2 text-xs text-brand-600 hover:underline">Nhập model thủ công</button>
-                    <input type="text" id="model-manual" class="hidden mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-colors" placeholder="vd: gpt-4o-mini">
-                    {% for error in form.model_name.errors %}<p class="text-xs text-red-600 mt-1.5">{{ error }}</p>{% endfor %}
+                    <button type="button" id="model-manual-toggle" class="link-button">Nhập model thủ công</button>
+                    <input type="text" id="model-manual" class="input hidden" placeholder="vd: gpt-4o-mini">
+                    {% if form.model_name.errors %}<div class="field__error">{{ form.model_name.errors }}</div>{% endif %}
                 </div>
 
-                <div class="flex flex-col gap-3 pt-1">
-                    <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                <div class="stack stack--sm">
+                    <label class="checkbox-field">
                         {{ form.is_active }}
                         <span>{{ form.is_active.label }}</span>
                     </label>
                     {% if config.has_api_key %}
-                    <label class="inline-flex items-center gap-2 text-sm text-red-600">
+                    <label class="checkbox-field checkbox-field--danger">
                         {{ form.remove_api_key }}
                         <span>{{ form.remove_api_key.label }}</span>
                     </label>
                     {% endif %}
                 </div>
 
-                <div class="pt-4 border-t border-slate-100 flex justify-end">
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm shadow-sm transition-colors">
-                        Lưu cài đặt
-                    </button>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn--primary">Lưu cài đặt</button>
                 </div>
             </form>
         </div>
 
-        <!-- Status / help -->
-        <div class="space-y-4">
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <h2 class="text-sm font-semibold text-slate-900 mb-3">Trạng thái hiện tại</h2>
-                <dl class="space-y-2 text-sm">
-                    <div class="flex items-center justify-between gap-2">
-                        <dt class="text-slate-500">Nhà cung cấp</dt>
-                        <dd class="font-medium text-slate-800">{{ config.get_provider_display }}</dd>
+        <aside class="stack">
+            <div class="card">
+                <div class="card__head">
+                    <h2 class="card__title">Trạng thái hiện tại</h2>
+                </div>
+                <dl class="status-list">
+                    <div class="status-row">
+                        <dt class="status-row__label">Nhà cung cấp</dt>
+                        <dd class="status-row__value">{{ config.get_provider_display }}</dd>
                     </div>
-                    <div class="flex items-center justify-between gap-2">
-                        <dt class="text-slate-500">Model</dt>
-                        <dd class="font-medium text-slate-800 text-right break-all">{{ config.get_model_name|default:"Mặc định" }}</dd>
+                    <div class="status-row">
+                        <dt class="status-row__label">Model</dt>
+                        <dd class="status-row__value">{{ config.get_model_name|default:"Mặc định" }}</dd>
                     </div>
-                    <div class="flex items-center justify-between gap-2">
-                        <dt class="text-slate-500">API key</dt>
-                        <dd class="font-medium {% if config.has_api_key %}text-emerald-600{% else %}text-slate-400{% endif %}">
+                    <div class="status-row">
+                        <dt class="status-row__label">API key</dt>
+                        <dd class="status-row__value{% if config.has_api_key %} status-row__value--success{% else %} status-row__value--muted{% endif %}">
                             {% if config.has_api_key %}{{ config.key_hint }}{% else %}Chưa cấu hình{% endif %}
                         </dd>
                     </div>
-                    <div class="flex items-center justify-between gap-2">
-                        <dt class="text-slate-500">Kích hoạt</dt>
-                        <dd class="font-medium {% if config.is_active %}text-emerald-600{% else %}text-slate-400{% endif %}">
+                    <div class="status-row">
+                        <dt class="status-row__label">Kích hoạt</dt>
+                        <dd class="status-row__value{% if config.is_active %} status-row__value--success{% else %} status-row__value--muted{% endif %}">
                             {% if config.is_active %}Đang dùng{% else %}Tắt{% endif %}
                         </dd>
                     </div>
                 </dl>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <h2 class="text-sm font-semibold text-slate-900 mb-2">Gợi ý dịch vụ có model miễn phí</h2>
-                <p class="text-xs text-slate-500 mb-3">Bấm để điền nhanh Base URL (sau đó nhập API key của dịch vụ đó).</p>
-                <div class="flex flex-col gap-2">
-                    <button type="button" class="free-provider-btn text-left px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm text-slate-700" data-base-url="https://openrouter.ai/api/v1">
-                        <span class="font-medium">OpenRouter</span>
-                        <span class="block text-[11px] text-slate-400">Model có hậu tố :free là miễn phí</span>
+            <div class="card">
+                <div class="provider-options__intro">
+                    <h2 class="card__title">Gợi ý dịch vụ có model miễn phí</h2>
+                    <p class="section-meta">Bấm để điền nhanh Base URL (sau đó nhập API key của dịch vụ đó).</p>
+                </div>
+                <div class="provider-options">
+                    <button type="button" class="provider-option free-provider-btn" data-base-url="https://openrouter.ai/api/v1">
+                        <span class="provider-option__name">OpenRouter</span>
+                        <span class="provider-option__hint">Model có hậu tố :free là miễn phí</span>
                     </button>
-                    <button type="button" class="free-provider-btn text-left px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm text-slate-700" data-base-url="https://generativelanguage.googleapis.com/v1beta/openai/">
-                        <span class="font-medium">Google Gemini</span>
-                        <span class="block text-[11px] text-slate-400">Có hạn mức miễn phí</span>
+                    <button type="button" class="provider-option free-provider-btn" data-base-url="https://generativelanguage.googleapis.com/v1beta/openai/">
+                        <span class="provider-option__name">Google Gemini</span>
+                        <span class="provider-option__hint">Có hạn mức miễn phí</span>
                     </button>
-                    <button type="button" class="free-provider-btn text-left px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm text-slate-700" data-base-url="https://api.groq.com/openai/v1">
-                        <span class="font-medium">Groq</span>
-                        <span class="block text-[11px] text-slate-400">Có hạn mức miễn phí</span>
+                    <button type="button" class="provider-option free-provider-btn" data-base-url="https://api.groq.com/openai/v1">
+                        <span class="provider-option__name">Groq</span>
+                        <span class="provider-option__hint">Có hạn mức miễn phí</span>
                     </button>
-                    <button type="button" class="free-provider-btn text-left px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm text-slate-700" data-base-url="http://localhost:11434/v1">
-                        <span class="font-medium">Ollama (local)</span>
-                        <span class="block text-[11px] text-slate-400">Chạy model miễn phí trên máy</span>
+                    <button type="button" class="provider-option free-provider-btn" data-base-url="http://localhost:11434/v1">
+                        <span class="provider-option__name">Ollama (local)</span>
+                        <span class="provider-option__hint">Chạy model miễn phí trên máy</span>
                     </button>
                 </div>
             </div>
 
-            <div class="bg-brand-50 border border-brand-100 rounded-xl p-5 text-xs text-brand-900 leading-relaxed space-y-2">
-                <p class="font-semibold text-brand-800">API key được bảo vệ</p>
+            <div class="card ai-settings-note">
+                <p class="ai-settings-note__title">API key được bảo vệ</p>
                 <p>Key được mã hóa trước khi lưu vào database và không bao giờ hiển thị lại đầy đủ.</p>
                 <p>Khi nhập API key, hệ thống tự tải danh sách model mà key có thể dùng và gắn nhãn Miễn phí/Trả phí.</p>
                 <p>Nếu chưa cấu hình key riêng, hệ thống sẽ dùng dịch vụ AI của máy chủ (nếu có), rồi mới đến phân tích dự phòng.</p>
             </div>
-        </div>
+        </aside>
     </div>
 </div>
-
-<style>
-    input[type="text"], input[type="url"], input[type="password"], select {
-        width: 100%;
-        border-radius: 0.75rem;
-        border: 1px solid #e2e8f0;
-        padding: 0.625rem 0.875rem;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        color: #1e293b;
-        background-color: #fff;
-        transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    input::placeholder { color: #94a3b8; }
-    input:focus, select:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    select { appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
-    input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: #2563eb; }
-</style>
 
 <script>
     (function () {
@@ -210,8 +185,7 @@
         function setStatus(text, isError) {
             if (!modelStatus) return;
             modelStatus.textContent = text;
-            modelStatus.classList.toggle('text-red-600', !!isError);
-            modelStatus.classList.toggle('text-slate-400', !isError);
+            modelStatus.classList.toggle('is-error', !!isError);
         }
 
         function setHiddenValue(value) {

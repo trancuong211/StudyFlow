@@ -1,236 +1,239 @@
 {% extends 'base.html' %}
+{% load ui_filters %}
 
 {% block title %}Dashboard – StudyFlow{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-            <p class="text-sm font-medium text-brand-600 mb-1">Tổng quan</p>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Xin chào, {{ user.full_name|default:user.username }} 👋</h1>
-            <p class="mt-1 text-sm text-slate-500">Hôm nay là một ngày tuyệt vời để hoàn thành các mục tiêu học tập.</p>
-        </div>
-        <div class="flex flex-wrap gap-2.5">
-            <form method="post" action="{% url 'scheduler:auto_schedule' %}">
-                {% csrf_token %}
-                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    Tự động lập lịch
-                </button>
-            </form>
-            <a href="{% url 'tasks:create' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-600 text-white font-medium text-sm hover:bg-brand-700 shadow-sm transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                Thêm task
-            </a>
-        </div>
+<div class="page-head page-head--row">
+    <div>
+        <h1>Xin chào, {{ user.full_name|default:user.username }}</h1>
+        <p class="page-head__sub">Hôm nay là một ngày tuyệt vời để hoàn thành các mục tiêu học tập.</p>
     </div>
-
-    <!-- Stat Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Môn học -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <p class="text-sm font-medium text-slate-500">Môn học</p>
-                <div class="w-9 h-9 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                </div>
-            </div>
-            <p class="mt-3 text-3xl font-bold text-slate-900 tabular-nums">{{ total_courses }}</p>
-            <p class="text-xs text-slate-400 mt-0.5">đang theo học kỳ này</p>
-        </div>
-
-        <!-- Task sắp tới -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <p class="text-sm font-medium text-slate-500">Công việc cần làm</p>
-                <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                </div>
-            </div>
-            <p class="mt-3 text-3xl font-bold text-slate-900 tabular-nums">{{ total_pending_tasks }}</p>
-            <p class="text-xs text-slate-400 mt-0.5">chưa hoàn thành</p>
-        </div>
-
-        <!-- Pomodoro -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <p class="text-sm font-medium text-slate-500">Pomodoro hôm nay</p>
-                <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-            </div>
-            <p class="mt-3 text-3xl font-bold text-slate-900 tabular-nums">{{ today_pomodoro_mins }}<span class="text-base font-medium text-slate-400 ml-1">phút</span></p>
-            <p class="text-xs text-slate-400 mt-0.5">thời gian tập trung</p>
-        </div>
-
-        <!-- Mục tiêu -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <p class="text-sm font-medium text-slate-500">Mục tiêu ngày</p>
-                <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-            </div>
-            <p class="mt-3 text-3xl font-bold text-slate-900 tabular-nums">{{ user.daily_study_goal_hours }}<span class="text-base font-medium text-slate-400 ml-1">giờ</span></p>
-            <p class="text-xs text-slate-400 mt-0.5">thời gian học mong muốn</p>
-        </div>
+    <div class="dashboard-actions">
+        <form method="post" action="{% url 'scheduler:auto_schedule' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn--secondary btn--sm">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                Tự động lập lịch
+            </button>
+        </form>
+        <a href="{% url 'tasks:create' %}" class="btn btn--primary btn--sm">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Thêm task
+        </a>
     </div>
+</div>
 
-    <!-- AI Insight Banner -->
-    {% if latest_insight %}
-    <div class="bg-gradient-to-r from-brand-600 to-indigo-600 rounded-xl p-5 sm:p-6 text-white shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                    <svg class="w-4 h-4 text-brand-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.734-.988-2.386l-.548-.547z"></path></svg>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-brand-200">AI Insight</span>
-                    <span class="text-xs text-brand-300">• {{ latest_insight.created_at|timesince }} trước</span>
+<div class="dashboard-grid">
+    <div class="dashboard-col">
+        <div class="stat-strip">
+            <div class="card card--primary">
+                <div class="stat">
+                    <div class="stat__label">Môn học</div>
+                    <div class="stat__value">{{ total_courses }}</div>
+                    <div class="stat__hint">đang theo học kỳ này</div>
                 </div>
-                <h3 class="font-semibold text-lg">{{ latest_insight.title }}</h3>
-                <p class="text-sm text-brand-100 mt-1 line-clamp-2">{{ latest_insight.content }}</p>
-                {% if latest_insight.actionable_advice %}
-                <p class="text-xs text-brand-50 mt-2 bg-white/10 px-3 py-2 rounded-lg">
-                    💡 {{ latest_insight.actionable_advice }}
-                </p>
-                {% endif %}
             </div>
-            <form method="post" action="{% url 'ai_assistant:generate_insight' %}" class="self-start sm:self-center">
-                {% csrf_token %}
-                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium border border-white/20 transition-colors whitespace-nowrap">
-                    Phân tích lại
-                </button>
-            </form>
-            <form method="post" action="{% url 'ai_assistant:generate_insight' %}" data-loading-form>{% csrf_token %}<button class="sf-secondary">Phân tích lại</button></form>
+            <div class="card">
+                <div class="stat">
+                    <div class="stat__label">Công việc cần làm</div>
+                    <div class="stat__value">{{ total_pending_tasks }}</div>
+                    <div class="stat__hint">chưa hoàn thành</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="stat">
+                    <div class="stat__label">Pomodoro hôm nay</div>
+                    <div class="stat__value">{{ today_pomodoro_mins }}</div>
+                    <div class="stat__hint">phút tập trung</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="stat">
+                    <div class="stat__label">Mục tiêu ngày</div>
+                    <div class="stat__value">{{ user.daily_study_goal_hours }}</div>
+                    <div class="stat__hint">giờ học mong muốn</div>
+                </div>
+            </div>
         </div>
-    </div>
-    {% endif %}
 
-    <!-- Main Grid -->
-    <section class="sf-card space-y-3">
-        <div class="flex flex-wrap justify-between gap-3 items-center"><h2 class="font-semibold text-lg">Kế hoạch hôm nay</h2><form method="post" action="{% url 'ai_assistant:daily_summary' %}" data-loading-form>{% csrf_token %}<button class="sf-secondary">Cập nhật tóm tắt</button></form></div>
-        {% if daily_summary %}<p class="text-slate-700">{{ daily_summary.content }}</p>{% else %}<p class="text-slate-600">Tạo tóm tắt để xem các ưu tiên trong ngày.</p>{% endif %}
-        <p class="text-sm text-slate-600">{{ habits.advice }}</p>
-        {% if unread_count %}<a class="text-brand-700 font-medium" href="{% url 'notifications:list' %}">{{ unread_count }} nhắc việc chưa đọc</a>{% endif %}
-    </section>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Urgent Deadlines -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center">
-                        <svg class="w-4.5 h-4.5 w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        {% if latest_insight %}
+        <section class="card card--pad-lg ai-insight">
+            <div style="display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:var(--sp-4);">
+                <div style="flex:1; min-width:0;">
+                    <div class="ai-insight__head">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.734-.988-2.386l-.548-.547z"></path></svg>
+                        <span class="ai-insight__eyebrow">AI Insight</span>
+                        <span class="ai-insight__time">· {{ latest_insight.created_at|vi_timesince }}</span>
                     </div>
-                    <h2 class="font-semibold text-slate-900">Deadline gấp</h2>
-                    <span class="text-[11px] text-slate-400">3 ngày tới</span>
+                    <h2 class="ai-insight__title">{{ latest_insight.title }}</h2>
+                    <p class="ai-insight__body">{{ latest_insight.content }}</p>
+                    {% if latest_insight.actionable_advice %}
+                    <p class="ai-insight__advice">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"></path></svg>
+                        <span>{{ latest_insight.actionable_advice }}</span>
+                    </p>
+                    {% endif %}
                 </div>
-                <a href="{% url 'tasks:list' %}" class="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors">Xem tất cả →</a>
+                <form method="post" action="{% url 'ai_assistant:generate_insight' %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Phân tích lại
+                    </button>
+                </form>
             </div>
+        </section>
+        {% endif %}
 
-            <div class="p-3">
+        <section class="card card--pad-lg">
+            <div class="card__head">
+                <h2 class="card__title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    Kế hoạch hôm nay
+                </h2>
+                <form method="post" action="{% url 'ai_assistant:daily_summary' %}" data-loading-form style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--secondary btn--sm">Cập nhật tóm tắt</button>
+                </form>
+            </div>
+            {% if daily_summary %}
+                <p style="font-size:var(--text-sm); color:var(--text-muted);">{{ daily_summary.content }}</p>
+            {% else %}
+                <p style="font-size:var(--text-sm); color:var(--text-muted);">Tạo tóm tắt để xem các ưu tiên trong ngày.</p>
+            {% endif %}
+        </section>
+
+        <section class="card card--pad-lg">
+            <div class="card__head">
+                <h2 class="card__title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    Deadline gấp
+                    <span class="badge">3 ngày tới</span>
+                </h2>
+                <a href="{% url 'tasks:list' %}" class="btn btn--ghost btn--sm">Xem tất cả →</a>
+            </div>
+            <div>
                 {% for task in urgent_deadlines %}
-                <div class="flex items-center justify-between gap-3 px-3 py-3 rounded-lg hover:bg-slate-50 transition-colors {% if not forloop.last %}border-b border-slate-50{% endif %}">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="font-medium text-sm text-slate-900 truncate">{{ task.title }}</span>
+                <div class="task-row">
+                    <div class="task-row__body">
+                        <div class="task-row__title">{{ task.title }}</div>
+                        <div class="task-row__meta">
                             {% if task.course %}
-                            <span class="text-[11px] font-medium px-1.5 py-0.5 rounded text-white flex-shrink-0" style="background-color: {{ task.course.color }}">
+                            <span class="badge badge--primary">
+                                <span class="course-dot" style="background:{{ task.course.color }}"></span>
                                 {{ task.course.name }}
                             </span>
                             {% endif %}
+                            <span class="badge badge--danger">
+                                <span class="badge__dot"></span>
+                                Hạn: {{ task.deadline|date:"H:i - d/m/Y" }}
+                            </span>
+                            <span class="badge">{{ task.estimated_duration }} phút</span>
                         </div>
-                        <p class="text-xs text-slate-400 mt-1">
-                            Hạn: <span class="font-medium text-red-600">{{ task.deadline|date:"H:i - d/m/Y" }}</span> • {{ task.estimated_duration }} phút
-                        </p>
                     </div>
-                    <form method="post" action="{% url 'tasks:toggle_status' task.id %}" class="flex-shrink-0">
-                        {% csrf_token %}
-                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-brand-600 border border-brand-200 rounded-lg hover:bg-brand-50 transition-colors">
-                            Hoàn thành
-                        </button>
-                    </form>
+                    <div class="task-row__actions">
+                        <form method="post" action="{% url 'tasks:toggle_status' task.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn--ghost btn--sm">Hoàn thành</button>
+                        </form>
+                    </div>
                 </div>
                 {% empty %}
-                <div class="py-10 text-center">
-                    <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <p class="text-sm font-medium text-slate-600">Không có deadline gấp nào</p>
-                    <p class="text-xs text-slate-400 mt-1">Bạn đang làm rất tốt! 🎉</p>
+                <div class="empty">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p class="empty__title">Không có deadline gấp nào</p>
+                    <p class="empty__text">Bạn đang làm rất tốt.</p>
                 </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
 
-        <!-- Today's Schedule -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
-                        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    </div>
-                    <h2 class="font-semibold text-slate-900">Lịch hôm nay</h2>
-                </div>
-                <a href="{% url 'scheduler:calendar' %}" class="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors">Mở lịch →</a>
+        <section class="card card--pad-lg">
+            <div class="card__head">
+                <h2 class="card__title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16V9M12 16v-5M17 16v-3"/></svg>
+                    Tiến độ tuần này
+                </h2>
+                <span class="badge">7 ngày gần nhất</span>
             </div>
-
-            <div class="p-3">
-                {% for block in today_schedule_blocks %}
-                <div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-slate-50 transition-colors {% if not forloop.last %}border-b border-slate-50{% endif %}">
-                    <div class="w-10 text-center flex-shrink-0">
-                        <p class="text-xs font-semibold text-slate-900">{{ block.start_time|date:"H:i" }}</p>
-                        <p class="text-[10px] text-slate-400">{{ block.end_time|date:"H:i" }}</p>
+            <p style="font-size:var(--text-sm); color:var(--text-muted); margin-bottom:var(--sp-3);">Phút tập trung thực tế / mục tiêu ngày</p>
+            <div class="week-chart" aria-label="Tiến độ học 7 ngày gần nhất">
+                {% for day in habits.week %}
+                <div class="week-chart__day">
+                    <span class="week-chart__value">{{ day.minutes }}p</span>
+                    <div class="week-chart__track">
+                        <div class="week-chart__bar" style="height:{{ day.percent }}%"></div>
                     </div>
-                    <div class="w-px h-8 bg-slate-200 flex-shrink-0"></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-1.5">
+                    <span class="week-chart__label">{{ day.label }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <aside class="dashboard-col">
+        <section class="card card--pad-lg">
+            <div class="card__head">
+                <h2 class="card__title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    Lịch hôm nay
+                </h2>
+                <a href="{% url 'scheduler:calendar' %}" class="btn btn--ghost btn--sm">Mở lịch →</a>
+            </div>
+            {% if today_schedule_blocks %}
+            <div class="schedule-list">
+                {% for block in today_schedule_blocks %}
+                <div class="schedule-row">
+                    <div class="schedule-row__time">
+                        <div>{{ block.start_time|date:"H:i" }}</div>
+                        <div>{{ block.end_time|date:"H:i" }}</div>
+                    </div>
+                    <div class="schedule-row__body">
+                        <div class="schedule-row__title">
                             {% if block.is_locked %}
-                            <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+                            <svg class="schedule-row__lock" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
                             {% endif %}
-                            <h4 class="font-medium text-sm text-slate-900 truncate">{{ block.title }}</h4>
+                            <span>{{ block.title }}</span>
                         </div>
-                        <p class="text-xs text-slate-400 mt-0.5">{{ block.duration_minutes }} phút</p>
+                        <div class="schedule-row__meta">{{ block.duration_minutes }} phút</div>
                     </div>
                     {% if block.is_auto_generated %}
-                    <span class="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-100 flex-shrink-0">AI</span>
+                    <span class="badge badge--primary">AI</span>
                     {% endif %}
-                </div>
-                {% empty %}
-                <div class="py-10 text-center">
-                    <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    </div>
-                    <p class="text-sm font-medium text-slate-600">Chưa có lịch học hôm nay</p>
-                    <form method="post" action="{% url 'scheduler:auto_schedule' %}" class="text-xs text-slate-400 mt-1">
-                        {% csrf_token %}
-                        <p>Bấm <button type="submit" class="font-medium text-brand-600 hover:underline">Tự động lập lịch</button> để AI sắp xếp!</p>
-                    </form>
                 </div>
                 {% endfor %}
             </div>
-        </div>
-    </div>
+            {% else %}
+            <div class="empty">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <p class="empty__title">Chưa có lịch học hôm nay</p>
+                <form method="post" action="{% url 'scheduler:auto_schedule' %}" style="margin-top:var(--sp-2);">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm">Tự động lập lịch</button>
+                </form>
+            </div>
+            {% endif %}
+        </section>
 
-    <!-- Weekly Progress (CSS-only bar chart) -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-slate-900">Tiến độ tuần này</h2>
-            </div>
-        </div>
-        <p class="text-sm text-slate-600 mb-4">7 ngày gần nhất · phút tập trung thực tế / mục tiêu ngày</p>
-        <div class="flex items-end justify-between gap-2 h-36" aria-label="Tiến độ học 7 ngày gần nhất">
-            {% for day in habits.week %}
-            <div class="flex-1 flex flex-col items-center gap-1 h-full">
-                <span class="text-xs font-semibold">{{ day.minutes }}p</span>
-                <div class="w-full bg-brand-50 rounded-t-md flex-1 flex items-end"><div class="w-full bg-brand-500 rounded-t-md" style="height:{{ day.percent }}%"></div></div>
-                <span class="text-[10px] text-slate-600">{{ day.label }}</span>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+        <section class="card card--pad-lg">
+            <h2 class="card__title" style="margin-bottom:var(--sp-3);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"/></svg>
+                Gợi ý học tập
+            </h2>
+            <p style="font-size:var(--text-sm); color:var(--text-muted);">{{ habits.advice }}</p>
+        </section>
+
+        {% if unread_count %}
+        <section class="card card--pad-lg">
+            <h2 class="card__title" style="margin-bottom:var(--sp-3);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                Nhắc việc
+            </h2>
+            <p style="font-size:var(--text-sm); color:var(--text-muted);">Bạn có {{ unread_count }} nhắc việc chưa đọc.</p>
+            <a href="{% url 'notifications:list' %}" class="btn btn--secondary btn--sm" style="margin-top:var(--sp-3);">Xem nhắc việc</a>
+        </section>
+        {% endif %}
+    </aside>
 </div>
 {% endblock %}
