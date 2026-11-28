@@ -5,13 +5,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from apps.tasks.models import Task
 from apps.calendar_sync.models import GoogleCalendarEvent
 from .models import ScheduleBlock, BusyPeriod
+from .ics import build_calendar
 from .forms import BusyPeriodForm, BlockForm
 from .availability import recurring_intervals, busy_intervals
 from .progress import (
@@ -56,6 +57,17 @@ def calendar_view(request):
             report.append({'task_id': task.pk, 'title': task.title,
                            'missing_minutes': missing, 'reason': reason})
     return render(request, 'scheduler/calendar.html', {'schedule_report': report, 'overloaded_days': overloaded_days})
+
+
+@login_required
+@require_GET
+def export_ics(request):
+    response = HttpResponse(
+        build_calendar(request.user),
+        content_type='text/calendar; charset=utf-8',
+    )
+    response['Content-Disposition'] = 'attachment; filename="studyflow.ics"'
+    return response
 
 
 @login_required
